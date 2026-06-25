@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../include/integrator_velocity_verlet.hpp"
 
 void VelocityVerletIntegrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {
@@ -12,8 +10,8 @@ void VelocityVerletIntegrator::step(std::vector<Particle>& particles, ForceCalcu
     // update the vlocity based on the new accelerations
     // store the old accelerations
     old_accelerations.reserve(particles.size());
-    for (const Particle& p : particles) {
-        old_accelerations.push_back(p.acceleration);
+    for (size_t i = 0; i < particles.size(); i++) {
+        old_accelerations[i] = particles[i].acceleration;
     }
     // compute the new accelerations
     calculator.computeAccelerations(particles);

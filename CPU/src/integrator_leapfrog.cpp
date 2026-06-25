@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../include/integrator_leapfrog.hpp"
 
 void LeapfrogIntegrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../include/integrator_rk4.hpp"
 
 void RK4Integrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {

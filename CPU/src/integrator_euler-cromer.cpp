@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../include/integrator_euler-cromer.hpp"
 
 void EulerCromerIntegrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {
