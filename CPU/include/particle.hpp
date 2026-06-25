@@ -1,4 +1,6 @@
+#pragma once
 #include "common.hpp"
+#include <iostream>
 
 struct Vector3D{
     double x, y, z;
@@ -61,14 +63,13 @@ struct Vector3D{
 
 struct Particle {
     double mass;
-    std::string name;
-
     Vector3D position;
     Vector3D velocity;
     Vector3D acceleration;
+    std::string name;
     
     // default constructor
-    Particle() : mass(1), name(""), position(), velocity(), acceleration() {}
+    Particle() : mass(1), position(), velocity(), acceleration(), name("") {}
 
     // parameterized constructors
 
@@ -79,4 +80,14 @@ struct Particle {
     // Constructor with mass, position, velocity, acceleration with optional name
     Particle(double mass, const Vector3D& position, const Vector3D& velocity, const Vector3D& acceleration, const std::string& name = "")
         : mass(mass), position(position), velocity(velocity), acceleration(acceleration), name(name) {}
+
+    // function to tell the particle's information
+    void info() const {
+        if(name.size()) std::cout << "Particle: " << name << "\n";
+        std::cout << "Mass: " << mass << "\n";
+        std::cout << "\n";
+        std::cout << "Position:     (" << position.x << ", " << position.y << ", " << position.z << ")\n";
+        std::cout << "Velocity:     (" << velocity.x << ", " << velocity.y << ", " << velocity.z << ")\n";
+        std::cout << "Acceleration: (" << acceleration.x << ", " << acceleration.y << ", " << acceleration.z << ")\n";
+    }
 };

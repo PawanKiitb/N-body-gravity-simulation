@@ -265,18 +265,92 @@ Characteristics:
 
 ## n-body.cpp
 
-The main driver of the simulation.
+This file serves as the main entry point of the simulation and demonstrates the usage of the implemented force calculation and numerical integration classes.
 
-Responsibilities include:
+Its responsibilities include:
 
-* Creating the particle system
-* Initializing particle masses, positions and velocities
-* Selecting the force calculation algorithm
-* Selecting the numerical integrator
-* Executing the simulation loop
-* Writing simulation results to output files
+* Initializing the particle system.
+* Selecting the force calculation algorithm.
+* Selecting the numerical integrator.
+* Running the simulation loop for a specified duration and timestep.
+* Computing useful physical quantities at every timestep, including:
+
+  * Kinetic Energy
+  * Potential Energy
+  * Total Energy
+  * Total Angular Momentum
+  * Center of Mass
+* Writing the particle trajectories and diagnostic quantities to a CSV file (`orbit.csv`) for further analysis and visualization.
+
+The current implementation simulates the Sun–Earth system using astronomical units (AU, Solar Masses and Years), making it convenient to compare the numerical solution with the analytical solution of the two-body problem.
 
 ---
+
+## plot.py
+
+`plot.py` is a Python utility used to visualize the simulation output stored in `orbit.csv`.
+
+The script generates four plots:
+
+1. **Orbital Trajectories**
+
+   * Displays the trajectories of both the Earth and the Sun.
+   * Marks the initial and final positions of each body.
+   * Demonstrates the Earth's orbit around the system barycenter and the Sun's corresponding motion.
+
+2. **Energy**
+
+   * Plots the kinetic, potential and total energy of the system over time.
+   * Used to verify energy conservation and compare the performance of different numerical integrators.
+
+3. **Angular Momentum**
+
+   * Plots all three components of the total angular momentum.
+   * Since the simulated motion lies in the xy-plane, only the z-component is expected to be non-zero and remain nearly constant.
+
+4. **Center of Mass**
+
+   * Plots the three coordinates of the center of mass.
+   * A constant center of mass confirms conservation of linear momentum and serves as an additional correctness check.
+
+---
+
+# Validation
+
+To verify the correctness of the implementation, the simulator was tested on the classical two-body Sun–Earth problem.
+
+### Initial Conditions
+
+| Quantity                |                   Value |
+| ----------------------- | ----------------------: |
+| Sun Mass                |            1 Solar Mass |
+| Earth Mass              | 3.003 × 10⁻⁶ Solar Mass |
+| Earth Position          |            (1, 0, 0) AU |
+| Earth Velocity          |      (0, 2π, 0) AU/year |
+| Gravitational Softening |                       0 |
+| Integrator              |         Velocity Verlet |
+| Timestep                |      1 day (1/365 year) |
+
+These initial conditions correspond to an ideal circular orbit with an orbital period of one year.
+
+### Validation Results
+
+The simulation produced results consistent with the expected analytical solution.
+
+Observed properties include:
+
+* The Earth completed one revolution in approximately one year.
+* The orbit remained nearly perfectly circular.
+* The Sun exhibited the expected small motion about the system barycenter.
+* The center of mass remained effectively constant throughout the simulation.
+* The total angular momentum remained nearly constant.
+* The total mechanical energy remained nearly constant over the entire simulation.
+* For the circular orbit, both kinetic and potential energies remained nearly constant, consistent with Newtonian mechanics.
+
+The numerical solution closely matches the expected behaviour of the analytical two-body problem, providing confidence in both the force calculation and numerical integration implementations.
+
+Future validation will include elliptical two-body orbits, multi-body systems, and comparisons between different force calculation algorithms and numerical integrators.
+
 
 # Object-Oriented Design
 
