@@ -1,6 +1,7 @@
 #include "../include/integrator_velocity_verlet.hpp"
 
 void VelocityVerletIntegrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {
+    auto start = Clock::now();
     //  update the position based on current velocity and acceleration
     calculator.computeAccelerations(particles);
     for (Particle& p : particles) {
@@ -18,6 +19,10 @@ void VelocityVerletIntegrator::step(std::vector<Particle>& particles, ForceCalcu
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].velocity += (old_accelerations[i] + particles[i].acceleration) * (0.5 * dt);
     }
+    auto end = Clock::now();
+    double elapsed_time = std::chrono::duration<double, std::milli>(end - start).count();
+    timing_statistics.calls++;
+    timing_statistics.total_time += elapsed_time;
 }
 
 std::string VelocityVerletIntegrator::name() const {

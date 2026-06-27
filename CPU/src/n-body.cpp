@@ -1,60 +1,4 @@
-#include "../include/common.hpp"
-#include "../include/particle.hpp"
-#include "../include/force_calculator_naive.hpp"
-#include "../include/integrator_euler.hpp"
-#include "../include/integrator_velocity_verlet.hpp"
-#include "../include/integrator_rk4.hpp"
-#include "../include/integrator_euler-cromer.hpp"
-#include "../include/integrator_leapfrog.hpp"
-
-#include <iostream>
-#include <iomanip>
-#include <chrono>
-#include <fstream>
-
-double kineticEnergy(const std::vector<Particle>& particles)
-{
-    double KE = 0.0;
-    for (const Particle& p : particles) {
-        KE += 0.5 * p.mass * p.velocity.dot(p.velocity);
-    }
-    return KE;
-}
-
-double potentialEnergy(const std::vector<Particle>& particles) {
-    double PE = 0.0;
-    size_t n = particles.size();
-    for (size_t i = 0; i < n; i++) {
-        for (size_t j = i + 1; j < n; j++) {
-            Vector3D r = particles[j].position - particles[i].position;
-            double distance = r.norm();
-            PE -= constant::G * particles[i].mass * particles[j].mass / distance;
-        }
-    }
-    return PE;
-}
-
-double totalEnergy(const std::vector<Particle>& particles) {
-    return kineticEnergy(particles) + potentialEnergy(particles);
-}
-
-Vector3D angularMomentum(const std::vector<Particle>& particles) {
-    Vector3D L;
-    for (const Particle& p : particles) {
-        L += p.position.cross(p.velocity)*p.mass;
-    }
-    return L;
-}
-
-Vector3D centerOfMass(const std::vector<Particle>& particles) {
-    Vector3D com;
-    double totalMass = 0.0;
-    for (const Particle& p : particles) {
-        com += p.position * p.mass;
-        totalMass += p.mass;
-    }
-    return com / totalMass;
-}
+#include "../include/tests_common.hpp"
 
 int main() {
     // create a csv file to write the output, which will store x, y and z
@@ -66,7 +10,7 @@ int main() {
     double earth_mass = 3.003e-6; // Mass of Earth in solar masses;
     Particle earth(earth_mass, Vector3D(1, 0, 0), Vector3D(0, 2*constant::PI, 0),"Earth");
     std::vector<Particle> particles = {sun, earth};
-    NaiveForceCalculator force_calculator(0.0);
+    ForceCalculatorBarnesHut force_calculator(0.0, 0.3);
     VelocityVerletIntegrator integrator;
     
     Vector3D L = angularMomentum(particles);

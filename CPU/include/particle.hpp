@@ -91,3 +91,31 @@ struct Particle {
         std::cout << "Acceleration: (" << acceleration.x << ", " << acceleration.y << ", " << acceleration.z << ")\n";
     }
 };
+
+/****** Node Struct ******/
+struct Node {
+    Vector3D center;
+    double size = 0.0;
+    double size_sqr = 0.0;
+
+    double mass = 0.0;
+    Vector3D center_of_mass;
+
+    int firstChild = -1;
+        
+    std::vector<int> particleIndices;
+};
+
+struct Node_ {
+    Vector3D center;
+    double size = 0.0;
+    double size_sqr = 0.0;
+
+    double mass = 0.0;
+    Vector3D center_of_mass;
+
+    Node_* children[8] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+        
+    std::vector<Particle*> particles;
+    bool is_leaf = true;
+};

@@ -26,4 +26,6 @@ class ForceCalculator {
         ) = 0;
 
         virtual std::string name() const = 0;
+
+        virtual const TimingStatistics& getTimeStatistics() const = 0;
 };

@@ -1,38 +1,91 @@
+# ==========================================
 # Compiler
+# ==========================================
+
 CXX = g++
+CXXFLAGS = -std=c++23 -Wall -Wextra -Wpedantic -O3 -fopenmp -Iinclude
 
-# Compiler flags
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -O2 -Iinclude
+# ==========================================
+# Directories
+# ==========================================
 
-# Executable
-TARGET = nbody
+SRC_DIR   = src
+TEST_DIR  = tests
+BUILD_DIR = build
 
+# ==========================================
+# Main executable
+# ==========================================
+
+TARGET = $(BUILD_DIR)/nbody
+
+# ==========================================
 # Source files
-SRCS = $(wildcard src/*.cpp)
+# ==========================================
 
-# Object files
-OBJS = $(SRCS:.cpp=.o)
+MAIN_SRC = $(SRC_DIR)/n-body.cpp
 
+# All implementation files except main.cpp
+SRCS = $(filter-out $(MAIN_SRC),$(wildcard $(SRC_DIR)/*.cpp))
+
+# Corresponding object files
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+
+# ==========================================
 # Default target
+# ==========================================
+
 all: $(TARGET)
 
-# Link
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET)
+# ==========================================
+# Build directory
+# ==========================================
 
-# Compile
-src/%.o: src/%.cpp
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# ==========================================
+# Compile source files
+# ==========================================
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Remove build files
-clean:
-	rm -f src/*.o $(TARGET)
+# ==========================================
+# Build main executable
+# ==========================================
 
-# Rebuild everything
-rebuild: clean all
+$(TARGET): $(BUILD_DIR) $(OBJS)
+	$(CXX) $(CXXFLAGS) $(MAIN_SRC) $(OBJS) -o $(TARGET)
 
-# Run the program
+# ==========================================
+# Run main executable
+# ==========================================
+
 run: $(TARGET)
 	./$(TARGET)
 
-.PHONY: all clean rebuild run
+# ==========================================
+# Build and run a test
+#
+# Usage:
+# make run-test TEST=test1_EarthSun
+# ==========================================
+
+run-test: $(BUILD_DIR) $(OBJS)
+ifndef TEST
+	$(error Please specify a test. Example: make run-test TEST=test1_EarthSun)
+endif
+	$(CXX) $(CXXFLAGS) $(TEST_DIR)/$(TEST).cpp $(OBJS) -o $(BUILD_DIR)/$(TEST)
+	./$(BUILD_DIR)/$(TEST)
+
+# ==========================================
+# Clean
+# ==========================================
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+rebuild: clean all
+
+.PHONY: all run run-test clean rebuild

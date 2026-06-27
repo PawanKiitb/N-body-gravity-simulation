@@ -1,6 +1,7 @@
 #include "../include/integrator_rk4.hpp"
 
 void RK4Integrator::step(std::vector<Particle>& particles, ForceCalculator& calculator, double dt) {
+    auto start = Clock::now();
     // Copy the particles state
     size_t n = particles.size();
     K2State.resize(n);
@@ -39,6 +40,10 @@ void RK4Integrator::step(std::vector<Particle>& particles, ForceCalculator& calc
         particles[i].position += (particles[i].velocity + 2.0 * K2State[i].velocity + 2.0 * K3State[i].velocity + K4State[i].velocity) * (dt / 6.0);
         particles[i].velocity += (particles[i].acceleration + 2.0 * K2State[i].acceleration + 2.0 * K3State[i].acceleration + K4State[i].acceleration) * (dt / 6.0);
     }
+    auto end = Clock::now();
+    double elapsed_time = std::chrono::duration<double, std::milli>(end - start).count();
+    timing_statistics.calls++;
+    timing_statistics.total_time += elapsed_time;
 }
 
 std::string RK4Integrator::name() const {
