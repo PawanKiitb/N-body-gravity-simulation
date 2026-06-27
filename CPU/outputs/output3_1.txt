@@ -1,0 +1,113 @@
+g++ -std=c++23 -Wall -Wextra -Wpedantic -O3 -fopenmp -Iinclude tests/test3_computeLeafCapacity.cpp build/force_calculator_barnes_hut.o build/force_calculator_barnes_hut_optimized.o build/force_calculator_naive.o build/integrator_euler.o build/integrator_euler-cromer.o build/integrator_leapfrog.o build/integrator_rk4.o build/integrator_velocity_verlet.o -o build/test3_computeLeafCapacity
+./build/test3_computeLeafCapacity
+
+======================================================
+Particles : 100
+======================================================
+
+----------- Fastest ------------
+Leaf  2 | Time 0.0448715 ms | Avg Rel 0.0054077
+Leaf  4 | Time 0.0474702 ms | Avg Rel 0.00538958
+Leaf 16 | Time 0.0572492 ms | Avg Rel 0.00164835
+Leaf  8 | Time 0.058594 ms | Avg Rel 0.00468465
+Leaf 32 | Time 0.0613045 ms | Avg Rel 0.000259947
+Leaf 64 | Time 0.0648148 ms | Avg Rel 0.000259947
+Leaf  1 | Time 0.0651532 ms | Avg Rel 0.00552953
+
+--------- Most Accurate ---------
+Leaf 32 | Avg Rel 0.000259947 | Time 0.0613045 ms
+Leaf 64 | Avg Rel 0.000259947 | Time 0.0648148 ms
+Leaf 16 | Avg Rel 0.00164835 | Time 0.0572492 ms
+Leaf  8 | Avg Rel 0.00468465 | Time 0.058594 ms
+Leaf  4 | Avg Rel 0.00538958 | Time 0.0474702 ms
+Leaf  2 | Avg Rel 0.0054077 | Time 0.0448715 ms
+Leaf  1 | Avg Rel 0.00552953 | Time 0.0651532 ms
+
+======================================================
+Particles : 500
+======================================================
+
+----------- Fastest ------------
+Leaf  8 | Time 0.233377 ms | Avg Rel 0.00454929
+Leaf 16 | Time 0.235258 ms | Avg Rel 0.00326706
+Leaf 32 | Time  0.23648 ms | Avg Rel 0.00304346
+Leaf  4 | Time 0.303917 ms | Avg Rel 0.00501419
+Leaf  2 | Time 0.310984 ms | Avg Rel 0.0051401
+Leaf 64 | Time 0.364114 ms | Avg Rel 0.00206131
+Leaf  1 | Time 0.390352 ms | Avg Rel 0.00534254
+
+--------- Most Accurate ---------
+Leaf 64 | Avg Rel 0.00206131 | Time 0.364114 ms
+Leaf 32 | Avg Rel 0.00304346 | Time 0.23648 ms
+Leaf 16 | Avg Rel 0.00326706 | Time 0.235258 ms
+Leaf  8 | Avg Rel 0.00454929 | Time 0.233377 ms
+Leaf  4 | Avg Rel 0.00501419 | Time 0.303917 ms
+Leaf  2 | Avg Rel 0.0051401 | Time 0.310984 ms
+Leaf  1 | Avg Rel 0.00534254 | Time 0.390352 ms
+
+======================================================
+Particles : 1000
+======================================================
+
+----------- Fastest ------------
+Leaf 64 | Time 0.721043 ms | Avg Rel 0.00269739
+Leaf 16 | Time 0.738909 ms | Avg Rel 0.00380523
+Leaf 32 | Time 0.745681 ms | Avg Rel 0.00269739
+Leaf  4 | Time 0.755464 ms | Avg Rel 0.00471549
+Leaf  8 | Time 0.760982 ms | Avg Rel 0.00454627
+Leaf  2 | Time 0.936074 ms | Avg Rel 0.00516247
+Leaf  1 | Time  1.00557 ms | Avg Rel 0.00545017
+
+--------- Most Accurate ---------
+Leaf 32 | Avg Rel 0.00269739 | Time 0.745681 ms
+Leaf 64 | Avg Rel 0.00269739 | Time 0.721043 ms
+Leaf 16 | Avg Rel 0.00380523 | Time 0.738909 ms
+Leaf  8 | Avg Rel 0.00454627 | Time 0.760982 ms
+Leaf  4 | Avg Rel 0.00471549 | Time 0.755464 ms
+Leaf  2 | Avg Rel 0.00516247 | Time 0.936074 ms
+Leaf  1 | Avg Rel 0.00545017 | Time 1.00557 ms
+
+======================================================
+Particles : 5000
+======================================================
+
+----------- Fastest ------------
+Leaf 16 | Time  5.39059 ms | Avg Rel 0.00244996
+Leaf  8 | Time  5.55596 ms | Avg Rel 0.0031977
+Leaf 32 | Time  5.59961 ms | Avg Rel 0.00236503
+Leaf  4 | Time    5.667 ms | Avg Rel 0.00333829
+Leaf 64 | Time  6.19284 ms | Avg Rel 0.00233131
+Leaf  2 | Time  6.31232 ms | Avg Rel 0.00349289
+Leaf  1 | Time  7.10185 ms | Avg Rel 0.00359455
+
+--------- Most Accurate ---------
+Leaf 64 | Avg Rel 0.00233131 | Time 6.19284 ms
+Leaf 32 | Avg Rel 0.00236503 | Time 5.59961 ms
+Leaf 16 | Avg Rel 0.00244996 | Time 5.39059 ms
+Leaf  8 | Avg Rel 0.0031977 | Time 5.55596 ms
+Leaf  4 | Avg Rel 0.00333829 | Time 5.667 ms
+Leaf  2 | Avg Rel 0.00349289 | Time 6.31232 ms
+Leaf  1 | Avg Rel 0.00359455 | Time 7.10185 ms
+
+======================================================
+Particles : 10000
+======================================================
+
+----------- Fastest ------------
+Leaf  8 | Time  12.7986 ms | Avg Rel 0.00280011
+Leaf 16 | Time   13.052 ms | Avg Rel 0.00273937
+Leaf  4 | Time  14.0372 ms | Avg Rel 0.00291913
+Leaf  2 | Time  15.9635 ms | Avg Rel 0.00305781
+Leaf 64 | Time  16.7941 ms | Avg Rel 0.00199182
+Leaf 32 | Time  16.8446 ms | Avg Rel 0.00199344
+Leaf  1 | Time  17.9981 ms | Avg Rel 0.00313525
+
+--------- Most Accurate ---------
+Leaf 64 | Avg Rel 0.00199182 | Time 16.7941 ms
+Leaf 32 | Avg Rel 0.00199344 | Time 16.8446 ms
+Leaf 16 | Avg Rel 0.00273937 | Time 13.052 ms
+Leaf  8 | Avg Rel 0.00280011 | Time 12.7986 ms
+Leaf  4 | Avg Rel 0.00291913 | Time 14.0372 ms
+Leaf  2 | Avg Rel 0.00305781 | Time 15.9635 ms
+Leaf  1 | Avg Rel 0.00313525 | Time 17.9981 ms
+g++ -std=c++23 -Wall -Wextra -Wpedantic -O3 -fopenmp -Iinclude tests/test3_computeLeafCapacity.cpp build/force_calculator_barnes_hut.o build/force_calculator_barnes_hut_optimized.o build/force_calculator_naive.o build/integrator_euler.o build/integrator_euler-cromer.o build/integrator_leapfrog.o build/integrator_rk4.o build/integrator_velocity_verlet.o -o build/test3_computeLeafCapacity

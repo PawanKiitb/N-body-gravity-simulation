@@ -1,0 +1,912 @@
+g++ -std=c++23 -Wall -Wextra -Wpedantic -O3 -fopenmp -Iinclude tests/test2_ForceBenchmark.cpp build/force_calculator_barnes_hut.o build/force_calculator_barnes_hut_optimized.o build/force_calculator_naive.o build/integrator_euler.o build/integrator_euler-cromer.o build/integrator_leapfrog.o build/integrator_rk4.o build/integrator_velocity_verlet.o -o build/test2_ForceBenchmark
+./build/test2_ForceBenchmark
+
+=================================================================
+Run : 1
+===================================================================
+
+=========================================
+Number of Particles : 100
+=========================================
+
+Naive
+Force Time : 5.12413 ms, Average    : 0.0512413 ms
+
+Barnes-Hut
+Total Time : 12.337 ms, Average    : 0.12337 ms
+Tree Build : 4.29181 ms, Average    : 0.0408744 ms
+Traversal  : 5.1799 ms, Average    : 0.0493324 ms
+Destroy    : 3.98976 ms, Average    : 0.0379977 ms
+
+Naive Speedup : 0.415348x
+
+Average Absolute Error : 0.00095973
+Maximum Absolute Error : 0.00275292
+Average Relative Error : 0.00552953
+Maximum Relative Error : 0.15116
+
+Barnes-Hut Optimized
+Total Time : 5.07015 ms, Average    : 0.0507015 ms
+Tree Build : 1.10921 ms, Average    : 0.0105639 ms
+Traversal  : 4.3676 ms, Average    : 0.0415962 ms
+Destroy    : 0.003674 ms, Average    : 3.49905e-05 ms
+
+Naive Speedup : 1.01065x
+
+Barnes-Hut Speedup : 2.43325x
+
+Average Absolute Error : 0.000824392
+Maximum Absolute Error : 0.00281862
+Average Relative Error : 0.00468465
+Maximum Relative Error : 0.123073
+
+=========================================
+Number of Particles : 500
+=========================================
+
+Naive
+Force Time : 43.3553 ms, Average    : 0.433553 ms
+
+Barnes-Hut
+Total Time : 88.4888 ms, Average    : 0.884888 ms
+Tree Build : 18.4602 ms, Average    : 0.175811 ms
+Traversal  : 53.3501 ms, Average    : 0.508097 ms
+Destroy    : 21.1249 ms, Average    : 0.201189 ms
+
+Naive Speedup : 0.489952x
+
+Average Absolute Error : 0.00648367
+Maximum Absolute Error : 0.0649378
+Average Relative Error : 0.00534254
+Maximum Relative Error : 0.0301933
+
+Barnes-Hut Optimized
+Total Time : 24.9798 ms, Average    : 0.249798 ms
+Tree Build : 5.06585 ms, Average    : 0.0482462 ms
+Traversal  : 21.4654 ms, Average    : 0.204432 ms
+Destroy    : 0.003891 ms, Average    : 3.70571e-05 ms
+
+Naive Speedup : 1.73561x
+
+Barnes-Hut Speedup : 3.54241x
+
+Average Absolute Error : 0.00543891
+Maximum Absolute Error : 0.0247163
+Average Relative Error : 0.00454929
+Maximum Relative Error : 0.0329568
+
+=========================================
+Number of Particles : 1000
+=========================================
+
+Naive
+Force Time : 135.529 ms, Average    : 1.35529 ms
+
+Barnes-Hut
+Total Time : 192.654 ms, Average    : 1.92654 ms
+Tree Build : 41.8904 ms, Average    : 0.398956 ms
+Traversal  : 110.954 ms, Average    : 1.05671 ms
+Destroy    : 48.8943 ms, Average    : 0.46566 ms
+
+Naive Speedup : 0.703484x
+
+Average Absolute Error : 0.0109591
+Maximum Absolute Error : 0.0617257
+Average Relative Error : 0.00545017
+Maximum Relative Error : 0.0681065
+
+Barnes-Hut Optimized
+Total Time : 76.8242 ms, Average    : 0.768242 ms
+Tree Build : 15.811 ms, Average    : 0.150581 ms
+Traversal  : 64.5821 ms, Average    : 0.615068 ms
+Destroy    : 0.004578 ms, Average    : 4.36e-05 ms
+
+Naive Speedup : 1.76414x
+
+Barnes-Hut Speedup : 2.50772x
+
+Average Absolute Error : 0.00920481
+Maximum Absolute Error : 0.0292259
+Average Relative Error : 0.00454627
+Maximum Relative Error : 0.0729015
+
+=========================================
+Number of Particles : 5000
+=========================================
+
+Naive
+Force Time : 2876.07 ms, Average    : 28.7607 ms
+
+Barnes-Hut
+Total Time : 1096.13 ms, Average    : 10.9613 ms
+Tree Build : 199.633 ms, Average    : 1.90127 ms
+Traversal  : 744.095 ms, Average    : 7.08662 ms
+Destroy    : 208.889 ms, Average    : 1.98942 ms
+
+Naive Speedup : 2.62384x
+
+Average Absolute Error : 0.0365447
+Maximum Absolute Error : 0.281464
+Average Relative Error : 0.00359455
+Maximum Relative Error : 0.237547
+
+Barnes-Hut Optimized
+Total Time : 573.083 ms, Average    : 5.73083 ms
+Tree Build : 83.6748 ms, Average    : 0.796903 ms
+Traversal  : 516.263 ms, Average    : 4.91679 ms
+Destroy    : 0.00544 ms, Average    : 5.18095e-05 ms
+
+Naive Speedup : 5.01859x
+
+Barnes-Hut Speedup : 1.91269x
+
+Average Absolute Error : 0.0323187
+Maximum Absolute Error : 0.130739
+Average Relative Error : 0.0031977
+Maximum Relative Error : 0.240383
+
+=========================================
+Number of Particles : 10000
+=========================================
+
+Naive
+Force Time : 11339.8 ms, Average    : 113.398 ms
+
+Barnes-Hut
+Total Time : 2741.94 ms, Average    : 27.4194 ms
+Tree Build : 422.932 ms, Average    : 4.02793 ms
+Traversal  : 2019.3 ms, Average    : 19.2314 ms
+Destroy    : 444.701 ms, Average    : 4.23525 ms
+
+Naive Speedup : 4.13568x
+
+Average Absolute Error : 0.0647036
+Maximum Absolute Error : 0.995573
+Average Relative Error : 0.00313525
+Maximum Relative Error : 0.0386041
+
+Barnes-Hut Optimized
+Total Time : 1282.32 ms, Average    : 12.8232 ms
+Tree Build : 154.58 ms, Average    : 1.47219 ms
+Traversal  : 1189.34 ms, Average    : 11.327 ms
+Destroy    : 0.006036 ms, Average    : 5.74857e-05 ms
+
+Naive Speedup : 8.84318x
+
+Barnes-Hut Speedup : 2.13827x
+
+Average Absolute Error : 0.0573697
+Maximum Absolute Error : 0.231249
+Average Relative Error : 0.00280011
+Maximum Relative Error : 0.0293207
+===================================================================
+Run 1 completed.
+===================================================================
+
+=================================================================
+Run : 2
+===================================================================
+
+=========================================
+Number of Particles : 100
+=========================================
+
+Naive
+Force Time : 4.75521 ms, Average    : 0.0475521 ms
+
+Barnes-Hut
+Total Time : 11.4109 ms, Average    : 0.114109 ms
+Tree Build : 4.02037 ms, Average    : 0.0382892 ms
+Traversal  : 4.33819 ms, Average    : 0.041316 ms
+Destroy    : 3.91351 ms, Average    : 0.0372715 ms
+
+Naive Speedup : 0.416727x
+
+Average Absolute Error : 0.00146515
+Maximum Absolute Error : 0.00603476
+Average Relative Error : 0.00688443
+Maximum Relative Error : 0.0359286
+
+Barnes-Hut Optimized
+Total Time : 4.61824 ms, Average    : 0.0461824 ms
+Tree Build : 0.989343 ms, Average    : 0.00942231 ms
+Traversal  : 3.85732 ms, Average    : 0.0367364 ms
+Destroy    : 0.003706 ms, Average    : 3.52952e-05 ms
+
+Naive Speedup : 1.02966x
+
+Barnes-Hut Speedup : 2.47082x
+
+Average Absolute Error : 0.00110909
+Maximum Absolute Error : 0.00398606
+Average Relative Error : 0.00517991
+Maximum Relative Error : 0.025842
+
+=========================================
+Number of Particles : 500
+=========================================
+
+Naive
+Force Time : 38.9546 ms, Average    : 0.389546 ms
+
+Barnes-Hut
+Total Time : 78.0136 ms, Average    : 0.780136 ms
+Tree Build : 15.7374 ms, Average    : 0.14988 ms
+Traversal  : 47.0007 ms, Average    : 0.447626 ms
+Destroy    : 18.8174 ms, Average    : 0.179214 ms
+
+Naive Speedup : 0.499331x
+
+Average Absolute Error : 0.00678639
+Maximum Absolute Error : 0.0471907
+Average Relative Error : 0.00668114
+Maximum Relative Error : 0.116599
+
+Barnes-Hut Optimized
+Total Time : 24.7102 ms, Average    : 0.247102 ms
+Tree Build : 4.94999 ms, Average    : 0.0471428 ms
+Traversal  : 21.4016 ms, Average    : 0.203824 ms
+Destroy    : 0.003994 ms, Average    : 3.80381e-05 ms
+
+Naive Speedup : 1.57646x
+
+Barnes-Hut Speedup : 3.15714x
+
+Average Absolute Error : 0.00531217
+Maximum Absolute Error : 0.0159638
+Average Relative Error : 0.00521116
+Maximum Relative Error : 0.119309
+
+=========================================
+Number of Particles : 1000
+=========================================
+
+Naive
+Force Time : 133.136 ms, Average    : 1.33136 ms
+
+Barnes-Hut
+Total Time : 165.395 ms, Average    : 1.65395 ms
+Tree Build : 32.0623 ms, Average    : 0.305356 ms
+Traversal  : 102.326 ms, Average    : 0.97453 ms
+Destroy    : 39.1889 ms, Average    : 0.373227 ms
+
+Naive Speedup : 0.804962x
+
+Average Absolute Error : 0.0111916
+Maximum Absolute Error : 0.107291
+Average Relative Error : 0.00520087
+Maximum Relative Error : 0.0721745
+
+Barnes-Hut Optimized
+Total Time : 70.2771 ms, Average    : 0.702771 ms
+Tree Build : 12.9452 ms, Average    : 0.123287 ms
+Traversal  : 61.1499 ms, Average    : 0.58238 ms
+Destroy    : 0.004361 ms, Average    : 4.15333e-05 ms
+
+Naive Speedup : 1.89445x
+
+Barnes-Hut Speedup : 2.35347x
+
+Average Absolute Error : 0.00920401
+Maximum Absolute Error : 0.0316519
+Average Relative Error : 0.00436367
+Maximum Relative Error : 0.07446
+
+=========================================
+Number of Particles : 5000
+=========================================
+
+Naive
+Force Time : 2906.51 ms, Average    : 29.0651 ms
+
+Barnes-Hut
+Total Time : 1082.15 ms, Average    : 10.8215 ms
+Tree Build : 181.355 ms, Average    : 1.72719 ms
+Traversal  : 757.449 ms, Average    : 7.2138 ms
+Destroy    : 196.523 ms, Average    : 1.87164 ms
+
+Naive Speedup : 2.68587x
+
+Average Absolute Error : 0.0381814
+Maximum Absolute Error : 0.198629
+Average Relative Error : 0.00377988
+Maximum Relative Error : 0.18888
+
+Barnes-Hut Optimized
+Total Time : 559.504 ms, Average    : 5.59504 ms
+Tree Build : 82.1264 ms, Average    : 0.782156 ms
+Traversal  : 504.139 ms, Average    : 4.80133 ms
+Destroy    : 0.006179 ms, Average    : 5.88476e-05 ms
+
+Naive Speedup : 5.19481x
+
+Barnes-Hut Speedup : 1.93413x
+
+Average Absolute Error : 0.0336251
+Maximum Absolute Error : 0.130749
+Average Relative Error : 0.00337049
+Maximum Relative Error : 0.107105
+
+=========================================
+Number of Particles : 10000
+=========================================
+
+Naive
+Force Time : 11360.7 ms, Average    : 113.607 ms
+
+Barnes-Hut
+Total Time : 2689.46 ms, Average    : 26.8946 ms
+Tree Build : 410.284 ms, Average    : 3.90746 ms
+Traversal  : 2000.43 ms, Average    : 19.0517 ms
+Destroy    : 425.451 ms, Average    : 4.05191 ms
+
+Naive Speedup : 4.22417x
+
+Average Absolute Error : 0.0629221
+Maximum Absolute Error : 0.674251
+Average Relative Error : 0.0031028
+Maximum Relative Error : 0.131858
+
+Barnes-Hut Optimized
+Total Time : 1283.58 ms, Average    : 12.8358 ms
+Tree Build : 153.904 ms, Average    : 1.46575 ms
+Traversal  : 1201.53 ms, Average    : 11.4431 ms
+Destroy    : 0.007672 ms, Average    : 7.30667e-05 ms
+
+Naive Speedup : 8.85081x
+
+Barnes-Hut Speedup : 2.09528x
+
+Average Absolute Error : 0.0556398
+Maximum Absolute Error : 0.189745
+Average Relative Error : 0.00276639
+Maximum Relative Error : 0.13714
+===================================================================
+Run 2 completed.
+===================================================================
+
+=================================================================
+Run : 3
+===================================================================
+
+=========================================
+Number of Particles : 100
+=========================================
+
+Naive
+Force Time : 5.30514 ms, Average    : 0.0530514 ms
+
+Barnes-Hut
+Total Time : 18.6839 ms, Average    : 0.186839 ms
+Tree Build : 6.15878 ms, Average    : 0.0586551 ms
+Traversal  : 5.83437 ms, Average    : 0.0555654 ms
+Destroy    : 7.91271 ms, Average    : 0.0753591 ms
+
+Naive Speedup : 0.283942x
+
+Average Absolute Error : 0.00132382
+Maximum Absolute Error : 0.00338379
+Average Relative Error : 0.00598149
+Maximum Relative Error : 0.0431681
+
+Barnes-Hut Optimized
+Total Time : 4.63845 ms, Average    : 0.0463845 ms
+Tree Build : 0.982006 ms, Average    : 0.00935244 ms
+Traversal  : 3.97864 ms, Average    : 0.0378918 ms
+Destroy    : 0.003551 ms, Average    : 3.3819e-05 ms
+
+Naive Speedup : 1.14373x
+
+Barnes-Hut Speedup : 4.02806x
+
+Average Absolute Error : 0.000983147
+Maximum Absolute Error : 0.00325213
+Average Relative Error : 0.00440013
+Maximum Relative Error : 0.0204214
+
+=========================================
+Number of Particles : 500
+=========================================
+
+Naive
+Force Time : 39.8661 ms, Average    : 0.398661 ms
+
+Barnes-Hut
+Total Time : 77.8691 ms, Average    : 0.778691 ms
+Tree Build : 14.7961 ms, Average    : 0.140916 ms
+Traversal  : 48.7622 ms, Average    : 0.464402 ms
+Destroy    : 17.4155 ms, Average    : 0.165862 ms
+
+Naive Speedup : 0.511963x
+
+Average Absolute Error : 0.00605469
+Maximum Absolute Error : 0.024638
+Average Relative Error : 0.00581457
+Maximum Relative Error : 0.0536069
+
+Barnes-Hut Optimized
+Total Time : 23.7535 ms, Average    : 0.237535 ms
+Tree Build : 5.10208 ms, Average    : 0.0485912 ms
+Traversal  : 20.5955 ms, Average    : 0.196148 ms
+Destroy    : 0.003875 ms, Average    : 3.69048e-05 ms
+
+Naive Speedup : 1.67832x
+
+Barnes-Hut Speedup : 3.27821x
+
+Average Absolute Error : 0.00474249
+Maximum Absolute Error : 0.0135178
+Average Relative Error : 0.00453952
+Maximum Relative Error : 0.0422579
+
+=========================================
+Number of Particles : 1000
+=========================================
+
+Naive
+Force Time : 133.18 ms, Average    : 1.3318 ms
+
+Barnes-Hut
+Total Time : 169.726 ms, Average    : 1.69726 ms
+Tree Build : 31.8566 ms, Average    : 0.303396 ms
+Traversal  : 109.055 ms, Average    : 1.03862 ms
+Destroy    : 36.6445 ms, Average    : 0.348995 ms
+
+Naive Speedup : 0.784676x
+
+Average Absolute Error : 0.0102361
+Maximum Absolute Error : 0.0544311
+Average Relative Error : 0.00484289
+Maximum Relative Error : 0.0538152
+
+Barnes-Hut Optimized
+Total Time : 74.7666 ms, Average    : 0.747666 ms
+Tree Build : 12.7166 ms, Average    : 0.12111 ms
+Traversal  : 66.0791 ms, Average    : 0.629325 ms
+Destroy    : 0.00499 ms, Average    : 4.75238e-05 ms
+
+Naive Speedup : 1.78128x
+
+Barnes-Hut Speedup : 2.27008x
+
+Average Absolute Error : 0.00846651
+Maximum Absolute Error : 0.0237187
+Average Relative Error : 0.00400779
+Maximum Relative Error : 0.0511769
+
+=========================================
+Number of Particles : 5000
+=========================================
+
+Naive
+Force Time : 2912.31 ms, Average    : 29.1231 ms
+
+Barnes-Hut
+Total Time : 1064.5 ms, Average    : 10.645 ms
+Tree Build : 178.995 ms, Average    : 1.70471 ms
+Traversal  : 744.465 ms, Average    : 7.09014 ms
+Destroy    : 193.509 ms, Average    : 1.84294 ms
+
+Naive Speedup : 2.73586x
+
+Average Absolute Error : 0.036683
+Maximum Absolute Error : 0.361857
+Average Relative Error : 0.00366183
+Maximum Relative Error : 0.042125
+
+Barnes-Hut Optimized
+Total Time : 568.101 ms, Average    : 5.68101 ms
+Tree Build : 79.2193 ms, Average    : 0.754469 ms
+Traversal  : 515.371 ms, Average    : 4.9083 ms
+Destroy    : 0.005192 ms, Average    : 4.94476e-05 ms
+
+Naive Speedup : 5.1264x
+
+Barnes-Hut Speedup : 1.87378x
+
+Average Absolute Error : 0.0327917
+Maximum Absolute Error : 0.101801
+Average Relative Error : 0.00329986
+Maximum Relative Error : 0.0411469
+
+=========================================
+Number of Particles : 10000
+=========================================
+
+Naive
+Force Time : 11162.9 ms, Average    : 111.629 ms
+
+Barnes-Hut
+Total Time : 2844.3 ms, Average    : 28.443 ms
+Tree Build : 479.13 ms, Average    : 4.56314 ms
+Traversal  : 2106.21 ms, Average    : 20.0591 ms
+Destroy    : 427.79 ms, Average    : 4.07419 ms
+
+Naive Speedup : 3.92465x
+
+Average Absolute Error : 0.0641638
+Maximum Absolute Error : 0.434563
+Average Relative Error : 0.00315283
+Maximum Relative Error : 0.0554171
+
+Barnes-Hut Optimized
+Total Time : 1283.85 ms, Average    : 12.8385 ms
+Tree Build : 147.358 ms, Average    : 1.40341 ms
+Traversal  : 1198.87 ms, Average    : 11.4178 ms
+Destroy    : 0.007261 ms, Average    : 6.91524e-05 ms
+
+Naive Speedup : 8.69483x
+
+Barnes-Hut Speedup : 2.21544x
+
+Average Absolute Error : 0.0555191
+Maximum Absolute Error : 0.19257
+Average Relative Error : 0.00275911
+Maximum Relative Error : 0.0507273
+===================================================================
+Run 3 completed.
+===================================================================
+
+=================================================================
+Run : 4
+===================================================================
+
+=========================================
+Number of Particles : 100
+=========================================
+
+Naive
+Force Time : 5.28829 ms, Average    : 0.0528829 ms
+
+Barnes-Hut
+Total Time : 12.2996 ms, Average    : 0.122996 ms
+Tree Build : 4.25306 ms, Average    : 0.0405053 ms
+Traversal  : 5.17548 ms, Average    : 0.0492903 ms
+Destroy    : 3.96093 ms, Average    : 0.0377231 ms
+
+Naive Speedup : 0.429954x
+
+Average Absolute Error : 0.00188193
+Maximum Absolute Error : 0.00419328
+Average Relative Error : 0.00673507
+Maximum Relative Error : 0.0228555
+
+Barnes-Hut Optimized
+Total Time : 4.91048 ms, Average    : 0.0491048 ms
+Tree Build : 1.04042 ms, Average    : 0.00990873 ms
+Traversal  : 4.48176 ms, Average    : 0.0426834 ms
+Destroy    : 0.003664 ms, Average    : 3.48952e-05 ms
+
+Naive Speedup : 1.07694x
+
+Barnes-Hut Speedup : 2.50478x
+
+Average Absolute Error : 0.00157513
+Maximum Absolute Error : 0.00391968
+Average Relative Error : 0.00567373
+Maximum Relative Error : 0.0167476
+
+=========================================
+Number of Particles : 500
+=========================================
+
+Naive
+Force Time : 41.6998 ms, Average    : 0.416998 ms
+
+Barnes-Hut
+Total Time : 86.0859 ms, Average    : 0.860859 ms
+Tree Build : 16.4939 ms, Average    : 0.157085 ms
+Traversal  : 52.9413 ms, Average    : 0.504203 ms
+Destroy    : 20.5729 ms, Average    : 0.195932 ms
+
+Naive Speedup : 0.484398x
+
+Average Absolute Error : 0.00637213
+Maximum Absolute Error : 0.0246998
+Average Relative Error : 0.00610023
+Maximum Relative Error : 0.0720197
+
+Barnes-Hut Optimized
+Total Time : 23.343 ms, Average    : 0.23343 ms
+Tree Build : 5.52304 ms, Average    : 0.0526003 ms
+Traversal  : 19.5994 ms, Average    : 0.186661 ms
+Destroy    : 0.003649 ms, Average    : 3.47524e-05 ms
+
+Naive Speedup : 1.7864x
+
+Barnes-Hut Speedup : 3.68787x
+
+Average Absolute Error : 0.00484449
+Maximum Absolute Error : 0.0136578
+Average Relative Error : 0.00450125
+Maximum Relative Error : 0.0303051
+
+=========================================
+Number of Particles : 1000
+=========================================
+
+Naive
+Force Time : 137.653 ms, Average    : 1.37653 ms
+
+Barnes-Hut
+Total Time : 197.855 ms, Average    : 1.97855 ms
+Tree Build : 43.3694 ms, Average    : 0.413042 ms
+Traversal  : 111.84 ms, Average    : 1.06514 ms
+Destroy    : 51.5369 ms, Average    : 0.490827 ms
+
+Naive Speedup : 0.695726x
+
+Average Absolute Error : 0.0112667
+Maximum Absolute Error : 0.0703085
+Average Relative Error : 0.00536847
+Maximum Relative Error : 0.0538507
+
+Barnes-Hut Optimized
+Total Time : 75.7101 ms, Average    : 0.757101 ms
+Tree Build : 14.6356 ms, Average    : 0.139386 ms
+Traversal  : 64.831 ms, Average    : 0.617438 ms
+Destroy    : 0.004432 ms, Average    : 4.22095e-05 ms
+
+Naive Speedup : 1.81816x
+
+Barnes-Hut Speedup : 2.61332x
+
+Average Absolute Error : 0.00965081
+Maximum Absolute Error : 0.0320004
+Average Relative Error : 0.00462272
+Maximum Relative Error : 0.0478022
+
+=========================================
+Number of Particles : 5000
+=========================================
+
+Naive
+Force Time : 2917.16 ms, Average    : 29.1716 ms
+
+Barnes-Hut
+Total Time : 1069.92 ms, Average    : 10.6992 ms
+Tree Build : 177.757 ms, Average    : 1.69293 ms
+Traversal  : 754.177 ms, Average    : 7.18264 ms
+Destroy    : 191.047 ms, Average    : 1.8195 ms
+
+Naive Speedup : 2.72653x
+
+Average Absolute Error : 0.0370325
+Maximum Absolute Error : 0.236072
+Average Relative Error : 0.00356735
+Maximum Relative Error : 0.0550661
+
+Barnes-Hut Optimized
+Total Time : 573.139 ms, Average    : 5.73139 ms
+Tree Build : 77.2826 ms, Average    : 0.736025 ms
+Traversal  : 522.864 ms, Average    : 4.97965 ms
+Destroy    : 0.006671 ms, Average    : 6.35333e-05 ms
+
+Naive Speedup : 5.0898x
+
+Barnes-Hut Speedup : 1.86677x
+
+Average Absolute Error : 0.0329962
+Maximum Absolute Error : 0.117838
+Average Relative Error : 0.00319043
+Maximum Relative Error : 0.0570146
+
+=========================================
+Number of Particles : 10000
+=========================================
+
+Naive
+Force Time : 11208.7 ms, Average    : 112.087 ms
+
+Barnes-Hut
+Total Time : 2669.94 ms, Average    : 26.6994 ms
+Tree Build : 399.603 ms, Average    : 3.80574 ms
+Traversal  : 2009.71 ms, Average    : 19.1401 ms
+Destroy    : 413.227 ms, Average    : 3.93549 ms
+
+Naive Speedup : 4.19811x
+
+Average Absolute Error : 0.0632046
+Maximum Absolute Error : 0.697837
+Average Relative Error : 0.00314967
+Maximum Relative Error : 0.0725294
+
+Barnes-Hut Optimized
+Total Time : 1272.2 ms, Average    : 12.722 ms
+Tree Build : 149.28 ms, Average    : 1.42171 ms
+Traversal  : 1185.22 ms, Average    : 11.2878 ms
+Destroy    : 0.006494 ms, Average    : 6.18476e-05 ms
+
+Naive Speedup : 8.8105x
+
+Barnes-Hut Speedup : 2.09868x
+
+Average Absolute Error : 0.0555062
+Maximum Absolute Error : 0.182137
+Average Relative Error : 0.00277965
+Maximum Relative Error : 0.0803507
+===================================================================
+Run 4 completed.
+===================================================================
+
+=================================================================
+Run : 5
+===================================================================
+
+=========================================
+Number of Particles : 100
+=========================================
+
+Naive
+Force Time : 5.32693 ms, Average    : 0.0532693 ms
+
+Barnes-Hut
+Total Time : 12.283 ms, Average    : 0.12283 ms
+Tree Build : 4.2454 ms, Average    : 0.0404324 ms
+Traversal  : 5.38108 ms, Average    : 0.0512484 ms
+Destroy    : 4.77617 ms, Average    : 0.0454874 ms
+
+Naive Speedup : 0.433684x
+
+Average Absolute Error : 0.00148586
+Maximum Absolute Error : 0.00370229
+Average Relative Error : 0.00817789
+Maximum Relative Error : 0.0997355
+
+Barnes-Hut Optimized
+Total Time : 4.69311 ms, Average    : 0.0469311 ms
+Tree Build : 1.06796 ms, Average    : 0.0101711 ms
+Traversal  : 4.29095 ms, Average    : 0.0408662 ms
+Destroy    : 0.003561 ms, Average    : 3.39143e-05 ms
+
+Naive Speedup : 1.13505x
+
+Barnes-Hut Speedup : 2.61723x
+
+Average Absolute Error : 0.00122742
+Maximum Absolute Error : 0.00317734
+Average Relative Error : 0.00747404
+Maximum Relative Error : 0.14014
+
+=========================================
+Number of Particles : 500
+=========================================
+
+Naive
+Force Time : 39.8923 ms, Average    : 0.398923 ms
+
+Barnes-Hut
+Total Time : 82.1309 ms, Average    : 0.821309 ms
+Tree Build : 16.3327 ms, Average    : 0.155549 ms
+Traversal  : 50.205 ms, Average    : 0.478143 ms
+Destroy    : 19.4359 ms, Average    : 0.185104 ms
+
+Naive Speedup : 0.485717x
+
+Average Absolute Error : 0.00603739
+Maximum Absolute Error : 0.0353408
+Average Relative Error : 0.00621165
+Maximum Relative Error : 0.0694876
+
+Barnes-Hut Optimized
+Total Time : 31.4161 ms, Average    : 0.314161 ms
+Tree Build : 8.02362 ms, Average    : 0.0764154 ms
+Traversal  : 25.2719 ms, Average    : 0.240685 ms
+Destroy    : 0.004191 ms, Average    : 3.99143e-05 ms
+
+Naive Speedup : 1.26981x
+
+Barnes-Hut Speedup : 2.61429x
+
+Average Absolute Error : 0.00507
+Maximum Absolute Error : 0.0183333
+Average Relative Error : 0.00532265
+Maximum Relative Error : 0.0752441
+
+=========================================
+Number of Particles : 1000
+=========================================
+
+Naive
+Force Time : 140.732 ms, Average    : 1.40732 ms
+
+Barnes-Hut
+Total Time : 173.761 ms, Average    : 1.73761 ms
+Tree Build : 34.5304 ms, Average    : 0.328861 ms
+Traversal  : 107.038 ms, Average    : 1.01941 ms
+Destroy    : 41.509 ms, Average    : 0.395324 ms
+
+Naive Speedup : 0.809921x
+
+Average Absolute Error : 0.0108477
+Maximum Absolute Error : 0.0798943
+Average Relative Error : 0.00550946
+Maximum Relative Error : 0.0557229
+
+Barnes-Hut Optimized
+Total Time : 76.1945 ms, Average    : 0.761945 ms
+Tree Build : 14.0695 ms, Average    : 0.133995 ms
+Traversal  : 66.7547 ms, Average    : 0.635759 ms
+Destroy    : 0.004582 ms, Average    : 4.36381e-05 ms
+
+Naive Speedup : 1.84702x
+
+Barnes-Hut Speedup : 2.28049x
+
+Average Absolute Error : 0.00884082
+Maximum Absolute Error : 0.0275107
+Average Relative Error : 0.00453315
+Maximum Relative Error : 0.0479031
+
+=========================================
+Number of Particles : 5000
+=========================================
+
+Naive
+Force Time : 2936.36 ms, Average    : 29.3636 ms
+
+Barnes-Hut
+Total Time : 1047.49 ms, Average    : 10.4749 ms
+Tree Build : 180.098 ms, Average    : 1.71522 ms
+Traversal  : 733.768 ms, Average    : 6.98826 ms
+Destroy    : 190.295 ms, Average    : 1.81233 ms
+
+Naive Speedup : 2.80324x
+
+Average Absolute Error : 0.037077
+Maximum Absolute Error : 0.404027
+Average Relative Error : 0.00361339
+Maximum Relative Error : 0.0408728
+
+Barnes-Hut Optimized
+Total Time : 566.662 ms, Average    : 5.66662 ms
+Tree Build : 77.7336 ms, Average    : 0.74032 ms
+Traversal  : 515.835 ms, Average    : 4.91271 ms
+Destroy    : 0.006476 ms, Average    : 6.16762e-05 ms
+
+Naive Speedup : 5.18186x
+
+Barnes-Hut Speedup : 1.84852x
+
+Average Absolute Error : 0.032197
+Maximum Absolute Error : 0.105414
+Average Relative Error : 0.00317409
+Maximum Relative Error : 0.0393026
+
+=========================================
+Number of Particles : 10000
+=========================================
+
+Naive
+Force Time : 11299.2 ms, Average    : 112.992 ms
+
+Barnes-Hut
+Total Time : 2743.26 ms, Average    : 27.4326 ms
+Tree Build : 419.089 ms, Average    : 3.99132 ms
+Traversal  : 2029.14 ms, Average    : 19.3252 ms
+Destroy    : 435.815 ms, Average    : 4.15062 ms
+
+Naive Speedup : 4.11889x
+
+Average Absolute Error : 0.0621636
+Maximum Absolute Error : 0.558482
+Average Relative Error : 0.00305154
+Maximum Relative Error : 0.184818
+
+Barnes-Hut Optimized
+Total Time : 1288.16 ms, Average    : 12.8816 ms
+Tree Build : 153.068 ms, Average    : 1.45779 ms
+Traversal  : 1197.26 ms, Average    : 11.4025 ms
+Destroy    : 0.006483 ms, Average    : 6.17429e-05 ms
+
+Naive Speedup : 8.77157x
+
+Barnes-Hut Speedup : 2.1296x
+
+Average Absolute Error : 0.0539085
+Maximum Absolute Error : 0.194949
+Average Relative Error : 0.00266645
+Maximum Relative Error : 0.195535
+===================================================================
+Run 5 completed.
+===================================================================
