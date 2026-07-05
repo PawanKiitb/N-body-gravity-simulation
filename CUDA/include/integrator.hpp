@@ -1,6 +1,6 @@
 #pragma once
 
-#inlcude <common.hpp>
+#include <common.hpp>
 #include <particle_data.hpp>
 #include <force_calculator.hpp>
 
