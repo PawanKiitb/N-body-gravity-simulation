@@ -21,7 +21,7 @@ CUDA_FLAGS := -std=c++17 -O3
 INCLUDES := -I$(INC_DIR)
 
 # Change this if required
-ARCH := -arch=sm_86
+ARCH := -arch=sm_75
 
 # ===========================
 # Source Files

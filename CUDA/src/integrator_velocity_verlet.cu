@@ -99,5 +99,8 @@ void VelocityVerletIntegrator::step(
         std::cerr << "CUDA error in velocityVerletSecondStepKernel: " << cudaGetErrorString(err) << std::endl;
         exit(EXIT_FAILURE);
     }
-    
+}
+
+std::string VelocityVerletIntegrator::getName() const {
+    return "Velocity Verlet";
 }

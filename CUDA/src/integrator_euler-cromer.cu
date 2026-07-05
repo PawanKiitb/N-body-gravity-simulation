@@ -1,4 +1,4 @@
-#include "../include/integrator_euler.hpp"
+#include "../include/integrator_euler-cromer.hpp"
 
 __global__
 void eulerCromerIntegrationKernel(

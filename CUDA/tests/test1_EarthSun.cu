@@ -1,5 +1,8 @@
 #include "../src/test_common.cpp"
 
+#include <iostream>
+#include <fstream>
+
 int main()
 {
     constexpr int NUM_PARTICLES = 2;

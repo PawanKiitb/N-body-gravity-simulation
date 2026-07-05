@@ -7,7 +7,6 @@
 #include "../include/integrator_euler_cromer.hpp"
 #include "../include/integrator_leapfrog.hpp"
 #include "../include/integrator_velocity_verlet.hpp"
-#include "../include/integrator_rk4.hpp"
 
 #include <vector>
 #include <fstream>
