@@ -1,7 +1,7 @@
 #include "../include/integrator_leapfrog.hpp"
 
 __global__
-void LeafFrogFirstStepKernel(
+void LeapfrogFirstStepKernel(
     double *pos_x, double *pos_y, double *pos_z,
     double *vel_x, double *vel_y, double *vel_z,
     const double *acc_x, const double *acc_y, const double *acc_z,

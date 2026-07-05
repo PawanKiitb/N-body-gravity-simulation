@@ -101,6 +101,6 @@ void VelocityVerletIntegrator::step(
     }
 }
 
-std::string VelocityVerletIntegrator::getName() const {
+std::string VelocityVerletIntegrator::name() const {
     return "Velocity Verlet";
 }

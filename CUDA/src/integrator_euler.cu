@@ -48,12 +48,12 @@ void EulerIntegrator::step(ForceCalculator& calculator, ParticleArrays& particle
     // synchronize the device to ensure all threads have completed before returning
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
-        cerr << "CUDA error in EulerIntegrator::step: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CUDA error in EulerIntegrator::step: " << cudaGetErrorString(err) << std::endl;
         exit(EXIT_FAILURE);
     }
     cudaDeviceSynchronize();
 }
 
-std::string EulerIntegrator::name() {
+std::string EulerIntegrator::name() const {
     return "Euler Integrator";
 }

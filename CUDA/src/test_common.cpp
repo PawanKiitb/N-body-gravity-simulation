@@ -4,7 +4,7 @@
 #include "../include/particle_data.hpp"
 #include "../include/force_calculator_naive.hpp"
 #include "../include/integrator_euler.hpp"
-#include "../include/integrator_euler_cromer.hpp"
+#include "../include/integrator_euler-cromer.hpp"
 #include "../include/integrator_leapfrog.hpp"
 #include "../include/integrator_velocity_verlet.hpp"
 

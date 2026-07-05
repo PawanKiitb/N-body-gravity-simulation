@@ -1,11 +1,12 @@
 #pragma once
 
+#inlcude <common.hpp>
 #include <particle_data.hpp>
 #include <force_calculator.hpp>
 
-class Integrator {
+class TimeIntegrator {
     public:
-        virtual ~Integrator() = default;
+        virtual ~TimeIntegrator() = default;
         virtual void step(
             ForceCalculator& calculator,
             ParticleArrays& particles,

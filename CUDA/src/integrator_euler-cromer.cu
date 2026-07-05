@@ -51,12 +51,12 @@ void EulerCromerIntegrator::step(ForceCalculator& calculator, ParticleArrays& pa
     // synchronize the device to ensure all threads have completed before returning
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
-        cerr << "CUDA error in EulerCromerIntegrator::step: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CUDA error in EulerCromerIntegrator::step: " << cudaGetErrorString(err) << std::endl;
         exit(EXIT_FAILURE);
     }
     cudaDeviceSynchronize();
 }
 
-std::string EulerCromerIntegrator::name() {
+std::string EulerCromerIntegrator::name() const {
     return "Euler-Cromer Integrator";
 }
