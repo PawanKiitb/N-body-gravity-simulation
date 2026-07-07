@@ -21,4 +21,8 @@ class ForceCalculatorNaive : public ForceCalculator {
         ) override;
 
         std::string name() const override;
+        // funtion to return the total compute time in milliseconds
+        double getTotalComputeTime() const {
+            return total_compute_time_ms;
+        }
 };

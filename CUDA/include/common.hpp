@@ -4,8 +4,14 @@
 #include <vector>
 #include <cassert>
 #include <iostream>
+#include <stdint.h>
+#include <cstdio>
+#include <cstdlib>
+#include <algorithm>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <cub/cub.cuh>
+
 
 /***** Important Constants *****/
 /*
@@ -31,6 +37,8 @@ namespace constant {
     constexpr int MAX_NODES = 1000000;
     constexpr int MAX_PARTICLES = 1000000;
     constexpr int LEAF_CAPACITY = 8;
+    constexpr int MAX_DEPTH = 10;
+    constexpr double EPSILON = 1e-9;
 
     // CUDA specific constants
     constexpr int BLOCK_SIZE = 256; // Number of threads per block
