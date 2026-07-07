@@ -36,11 +36,20 @@ int main() {
         file >> h_mass[i] >> h_pos_x[i] >> h_pos_y[i] >> h_pos_z[i]
              >> h_vel_x[i] >> h_vel_y[i] >> h_vel_z[i];
     }
-    close(file);
+    file.close();
 
     ParticleArrays bhParticles;
-    allocParticleArrays(bhParticles, N);
-    copyToDevice(bhParticles, h_pos_x, h_pos_y, h_pos_z, h_vel_x, h_vel_y, h_vel_z, h_mass);
-    BarnesHutForceCalculator bh;
-    bh.computeForces(bhParticles, 0.5);
+    allocateParticles(bhParticles, N);
+    copyParticlesToDevice(
+        bhParticles,
+        h_pos_x.data(),
+        h_pos_y.data(),
+        h_pos_z.data(),
+        h_vel_x.data(),
+        h_vel_y.data(),
+        h_vel_z.data(),
+        h_mass.data()
+    );
+    BarnesHutForceCalculator bh(0.0, 0.5);
+    bh.computeAccelerations(bhParticles);
 }

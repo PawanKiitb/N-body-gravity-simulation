@@ -1,4 +1,5 @@
 #include "../include/force_calculator_barnes_hut.hpp"
+#include <iomanip>
 
 #define CUDA_CHECK(call)                                                     \
     do {                                                                     \
@@ -29,7 +30,7 @@ void computeAccelerationKernel(
     double ax = 0.0;
     double ay = 0.0;
     double az = 0.0;
-    constexpr int STACK_SIZE = 64;
+    constexpr int STACK_SIZE = 128;
     int stack[STACK_SIZE];
     int top = 0;
     stack[top++] = 0;
@@ -190,9 +191,9 @@ void initializeRootKernel(
         double size = fmax(xmax - xmin, fmax(ymax - ymin, zmax - zmin)) + constant::EPSILON;
         d_bounding_cube->size = size;
 
-        tree.center_x[0] = 0.5 * (xmin + xmax);
-        tree.center_y[0] = 0.5 * (ymin + ymax);
-        tree.center_z[0] = 0.5 * (zmin + zmax);
+        tree.center_x[0] = xmin + 0.5 * size;
+        tree.center_y[0] = ymin + 0.5 * size;
+        tree.center_z[0] = zmin + 0.5 * size;
 
         tree.size[0] = size;
         tree.size_sqr[0] = size * size;
@@ -558,15 +559,6 @@ void BarnesHutForceCalculator::computeMassCOM(ParticleArrays& particles) {
 void BarnesHutForceCalculator::buildTree(ParticleArrays& particles) {
     // compute the bounding box of the particles
     computeBoundingBox(particles);
-    std::cout << "Bounding box: "
-              << "xmin=" << d_bounding_cube->xmin << ", "
-              << "xmax=" << d_bounding_cube->xmax << ", "
-              << "ymin=" << d_bounding_cube->ymin << ", "
-              << "ymax=" << d_bounding_cube->ymax << ", "
-              << "zmin=" << d_bounding_cube->zmin << ", "
-              << "zmax=" << d_bounding_cube->zmax << ", "
-              << "size=" << d_bounding_cube->size
-              << std::endl;
 
     // Intialize the root node of the tree with the bounding box and all particles
     initializeRootKernel<<<1, 1>>>(d_bounding_cube, tree, nextFreeNode);
@@ -641,5 +633,5 @@ void BarnesHutForceCalculator::computeAccelerations(ParticleArrays& particles) {
     cudaEventElapsedTime(&destroy_ms, startEvent, stopEvent);
     destroy_tree_time_ms += destroy_ms;
 
-    total_compute_time_ms += build_ms + traverse_ms + destroy_ms;x  
+    total_compute_time_ms += build_ms + traverse_ms + destroy_ms;
 }

@@ -116,5 +116,5 @@ public:
     double getBuildTreeTime() const { return build_tree_time_ms; }
     double getDestroyTreeTime() const { return destroy_tree_time_ms; }
     double getTraversalTime() const { return traverse_tree_time_ms; }
-    void resetTotalComputeTime() { total_compute_time_ms = 0.0; build_tree_time_ms = 0.0; destroy_tree_time_ms = 0.0; traverse_tree_time_ms = 0.0; }
+    void resetTimeStatistics() { total_compute_time_ms = 0.0; build_tree_time_ms = 0.0; destroy_tree_time_ms = 0.0; traverse_tree_time_ms = 0.0; }
 };
