@@ -3,6 +3,7 @@
 #include "../include/common.hpp"
 #include "../include/particle_data.hpp"
 #include "../include/force_calculator_naive.hpp"
+#include "../include/force_calculator_barnes_hut.hpp"
 #include "../include/integrator_euler.hpp"
 #include "../include/integrator_euler-cromer.hpp"
 #include "../include/integrator_leapfrog.hpp"

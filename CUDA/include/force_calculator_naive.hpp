@@ -25,4 +25,7 @@ class ForceCalculatorNaive : public ForceCalculator {
         double getTotalComputeTime() const {
             return total_compute_time_ms;
         }
+        void resetTimeStatistics() {
+            total_compute_time_ms = 0.0;
+        }
 };

@@ -109,10 +109,12 @@ public:
     void radixSort(ParticleArrays& particles);
     void buildOctree(const uint32_t* sorted_morton_codes, int num_particles, TreeArrays& tree, int* d_next_free_node);
     void computeMassCOM(ParticleArrays& particles);
+    void destroyTree();
 
     std::string name() const override { return "Barnes-Hut"; }
     double getTotalComputeTime() const { return total_compute_time_ms; }
     double getBuildTreeTime() const { return build_tree_time_ms; }
     double getDestroyTreeTime() const { return destroy_tree_time_ms; }
-    double getTraverseTreeTime() const { return traverse_tree_time_ms; }
+    double getTraversalTime() const { return traverse_tree_time_ms; }
+    void resetTotalComputeTime() { total_compute_time_ms = 0.0; build_tree_time_ms = 0.0; destroy_tree_time_ms = 0.0; traverse_tree_time_ms = 0.0; }
 };

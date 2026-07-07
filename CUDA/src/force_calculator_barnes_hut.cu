@@ -10,49 +10,6 @@
         }                                                                    \
     } while(0)
 
-void BarnesHutForceCalculator::computeAccelerations(ParticleArrays& particles) {
-    if (particles.num_particles == 0) return;
-
-    cudaEventRecord(startEvent, 0);
-
-    // Build tree
-    buildTree(particles);
-
-    cudaEventSynchronize(stopEvent);    
-    cudaEventRecord(stopEvent, 0);
-    float build_ms = 0;
-    cudaEventElapsedTime(&build_ms, startEvent, stopEvent);
-    build_tree_time_ms += build_ms;
-
-    cudaEventRecord(startEvent, 0);
-
-    // Traverse tree to compute forces
-    int threads = constant::BLOCK_SIZE;
-    int blocks = (particles.num_particles + threads - 1) / threads;
-    computeAccelerationKernel<<<blocks, threads>>>(
-        particles, tree, theta_sqr, softening_squared
-    );
-
-    cudaEventSynchronize(stopEvent);
-    cudaEventRecord(stopEvent, 0);
-    float traverse_ms = 0;
-    cudaEventElapsedTime(&traverse_ms, startEvent, stopEvent);
-    traverse_tree_time_ms += traverse_ms;
-
-    cudaEventRecord(startEvent, 0);
-
-    // destroy the tree after computation
-    destroyTree();
-
-    cudaEventSynchronize(stopEvent);
-    cudaEventRecord(stopEvent, 0);
-    float destroy_ms = 0;
-    cudaEventElapsedTime(&destroy_ms, startEvent, stopEvent);
-    destroy_tree_time_ms += destroy_ms;
-
-    total_compute_time_ms += build_ms + traverse_tree_time_ms + destroy_ms;
-}
-
 
 __global__
 void computeAccelerationKernel(
@@ -465,13 +422,13 @@ void BarnesHutForceCalculator::buildOctree(
     int numCurrent = 1;
 
     // Launch kernels for each depth until no more nodes to split or max depth reached
-    for (int depth = 0; depth < MAX_DEPTH && numCurrent > 0; ++depth) {
+    for (int depth = 0; depth < constant::MAX_DEPTH && numCurrent > 0; ++depth) {
         // Reset next-level counter to 0
         CUDA_CHECK(cudaMemset(d_next_level_count, 0, sizeof(int)));
 
         // Launch kernel: one thread per current node
-        int blocks = (numCurrent + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        buildOctreeLevelKernel<<<blocks, BLOCK_SIZE>>>(
+        int blocks = (numCurrent + constant::BLOCK_SIZE - 1) / constant::BLOCK_SIZE;
+        buildOctreeLevelKernel<<<blocks, constant::BLOCK_SIZE>>>(
             d_sorted_codes,
             d_qFirstCur, d_qCountCur, d_qIdxCur, numCurrent,
             depth,
@@ -579,7 +536,7 @@ void computeInternalMassCOMKernel(
 void BarnesHutForceCalculator::computeMassCOM(ParticleArrays& particles) {
     // Get total number of nodes created
     int num_nodes;
-    CUDA_CHECK(cudaMemcpy(&num_nodes, d_next_free_node, sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(&num_nodes, nextFreeNode, sizeof(int), cudaMemcpyDeviceToHost));
 
     int threads = constant::BLOCK_SIZE;
     int blocks = (num_nodes + threads - 1) / threads;
@@ -601,6 +558,15 @@ void BarnesHutForceCalculator::computeMassCOM(ParticleArrays& particles) {
 void BarnesHutForceCalculator::buildTree(ParticleArrays& particles) {
     // compute the bounding box of the particles
     computeBoundingBox(particles);
+    std::cout << "Bounding box: "
+              << "xmin=" << d_bounding_cube->xmin << ", "
+              << "xmax=" << d_bounding_cube->xmax << ", "
+              << "ymin=" << d_bounding_cube->ymin << ", "
+              << "ymax=" << d_bounding_cube->ymax << ", "
+              << "zmin=" << d_bounding_cube->zmin << ", "
+              << "zmax=" << d_bounding_cube->zmax << ", "
+              << "size=" << d_bounding_cube->size
+              << std::endl;
 
     // Intialize the root node of the tree with the bounding box and all particles
     initializeRootKernel<<<1, 1>>>(d_bounding_cube, tree, nextFreeNode);
@@ -632,5 +598,48 @@ void destroyTreeKernel(
 }
 
 void BarnesHutForceCalculator::destroyTree() {
-    destroyTreeKernel<<<1, 1>>>(d_next_free_node);
+    destroyTreeKernel<<<1, 1>>>(nextFreeNode);
+}
+
+void BarnesHutForceCalculator::computeAccelerations(ParticleArrays& particles) {
+    if (particles.num_particles == 0) return;
+
+    cudaEventRecord(startEvent, 0);
+
+    // Build tree
+    buildTree(particles);
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float build_ms = 0;
+    cudaEventElapsedTime(&build_ms, startEvent, stopEvent);
+    build_tree_time_ms += build_ms;
+
+    cudaEventRecord(startEvent, 0);
+
+    // Traverse tree to compute forces
+    int threads = constant::BLOCK_SIZE;
+    int blocks = (particles.num_particles + threads - 1) / threads;
+    computeAccelerationKernel<<<blocks, threads>>>(
+        particles, tree, theta_sqr, softening_squared
+    );
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float traverse_ms = 0;
+    cudaEventElapsedTime(&traverse_ms, startEvent, stopEvent);
+    traverse_tree_time_ms += traverse_ms;
+
+    cudaEventRecord(startEvent, 0);
+
+    // destroy the tree after computation
+    destroyTree();
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float destroy_ms = 0;
+    cudaEventElapsedTime(&destroy_ms, startEvent, stopEvent);
+    destroy_tree_time_ms += destroy_ms;
+
+    total_compute_time_ms += build_ms + traverse_ms + destroy_ms;x  
 }
