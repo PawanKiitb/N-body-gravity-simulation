@@ -23,10 +23,10 @@ void computeAccelerationKernel(
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid >= particles.num_particles) return;
 
-    double px = particles.pos_x_sorted[tid];
-    double py = particles.pos_y_sorted[tid];
-    double pz = particles.pos_z_sorted[tid];
-    double ax = 0.0, ay = 0.0, az = 0.0;
+    float px = particles.pos_x_sorted[tid];
+    float py = particles.pos_y_sorted[tid];
+    float pz = particles.pos_z_sorted[tid];
+    float ax = 0.0f, ay = 0.0f, az = 0.0f;
 
     constexpr int STACK_SIZE = 128;
     int stack[STACK_SIZE];
@@ -35,7 +35,7 @@ void computeAccelerationKernel(
 
     while(top > 0) {
         int node = stack[--top];
-        if(tree.mass[node] == 0.0) continue;
+        if(tree.mass[node] == 0.0f) continue;
 
         if(tree.first_child[node] == -1) {
             int first = tree.particle_start[node];
@@ -43,13 +43,13 @@ void computeAccelerationKernel(
             for(int i=0;i<count;i++) {
                 int other = first + i;              // direct sorted-space index, no lookup needed
                 if(other == tid) continue;
-                double dx = particles.pos_x_sorted[other] - px;
-                double dy = particles.pos_y_sorted[other] - py;
-                double dz = particles.pos_z_sorted[other] - pz;
-                double dist2 = dx*dx + dy*dy + dz*dz + softening_squared;
-                double invDist = rsqrt(dist2);
-                double invDist3 = invDist * invDist * invDist;
-                double scale = constant::G * particles.mass_sorted[other] * invDist3;
+                float dx = particles.pos_x_sorted[other] - px;
+                float dy = particles.pos_y_sorted[other] - py;
+                float dz = particles.pos_z_sorted[other] - pz;
+                float dist2 = dx*dx + dy*dy + dz*dz + static_cast<float>(softening_squared);
+                float invDist = rsqrtf(dist2);
+                float invDist3 = invDist * invDist * invDist;
+                float scale = static_cast<float>(constant::G) * particles.mass_sorted[other] * invDist3;
                 ax += dx*scale; ay += dy*scale; az += dz*scale;
             }
             continue;
@@ -65,22 +65,22 @@ void computeAccelerationKernel(
         #pragma unroll
         for(int i=0;i<8;i++) {
             int child = firstChild + i;
-            if(tree.mass[child] == 0.0) continue;
+            if(tree.mass[child] == 0.0f) continue;
 
-            double dx = tree.com_x[child] - px;
-            double dy = tree.com_y[child] - py;
-            double dz = tree.com_z[child] - pz;
-            double dist2 = dx*dx + dy*dy + dz*dz;
+            float dx = tree.com_x[child] - px;
+            float dy = tree.com_y[child] - py;
+            float dz = tree.com_z[child] - pz;
+            float dist2 = dx*dx + dy*dy + dz*dz;
 
             bool mustDescend = (i == containingChild) ||
-                                (tree.size_sqr[child] >= theta_sqr * dist2);
+                                (tree.size_sqr[child] >= static_cast<float>(theta_sqr) * dist2);
 
             if (mustDescend && top < STACK_SIZE) {
                 stack[top++] = child;
             } else {
-                double invDist = rsqrt(dist2 + softening_squared);
-                double invDist3 = invDist * invDist * invDist;
-                double scale = constant::G * tree.mass[child] * invDist3;
+                float invDist = rsqrtf(dist2 + static_cast<float>(softening_squared));
+                float invDist3 = invDist * invDist * invDist;
+                float scale = static_cast<float>(constant::G) * tree.mass[child] * invDist3;
                 ax += dx*scale; ay += dy*scale; az += dz*scale;
             }
         }
@@ -93,17 +93,15 @@ void computeAccelerationKernel(
 __global__
 void indexAccelerationKernel(
     ParticleArrays particles,
-    const double* acc_x_sorted, const double* acc_y_sorted, const double* acc_z_sorted
+    const float* acc_x_sorted, const float* acc_y_sorted, const float* acc_z_sorted
 )
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid >= particles.num_particles) return;
-
     int sorted_idx = particles.particle_indices_sorted[tid];
-    particles.acc_x[sorted_idx] = acc_x_sorted[tid];
-    particles.acc_y[sorted_idx] = acc_y_sorted[tid];
-    particles.acc_z[sorted_idx] = acc_z_sorted[tid];
-    return 0;
+    particles.acc_x[sorted_idx] = static_cast<double>(acc_x_sorted[tid]);
+    particles.acc_y[sorted_idx] = static_cast<double>(acc_y_sorted[tid]);
+    particles.acc_z[sorted_idx] = static_cast<double>(acc_z_sorted[tid]);
 }
 
 // Compute axis-aligned bounding box (min/max) of positions on device
@@ -184,14 +182,14 @@ void initializeRootKernel(
 {
     // Single thread initializes root node (index 0)
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        double xmin = d_bounding_cube->xmin;
-        double ymin = d_bounding_cube->ymin;
-        double zmin = d_bounding_cube->zmin;
-        double xmax = d_bounding_cube->xmax;
-        double ymax = d_bounding_cube->ymax;
-        double zmax = d_bounding_cube->zmax;
+        float xmin = d_bounding_cube->xmin;
+        float ymin = d_bounding_cube->ymin;
+        float zmin = d_bounding_cube->zmin;
+        float xmax = d_bounding_cube->xmax;
+        float ymax = d_bounding_cube->ymax;
+        float zmax = d_bounding_cube->zmax;
 
-        double size = fmax(xmax - xmin, fmax(ymax - ymin, zmax - zmin)) + constant::EPSILON;
+        float size = fmax(xmax - xmin, fmax(ymax - ymin, zmax - zmin)) + constant::EPSILON;
         d_bounding_cube->size = size;
 
         tree.center_x[0] = xmin + 0.5 * size;
@@ -200,10 +198,10 @@ void initializeRootKernel(
 
         tree.size[0] = size;
         tree.size_sqr[0] = size * size;
-        tree.mass[0] = 0.0;
-        tree.com_x[0] = 0.0;
-        tree.com_y[0] = 0.0;
-        tree.com_z[0] = 0.0;
+        tree.mass[0] = 0.0f;
+        tree.com_x[0] = 0.0f;
+        tree.com_y[0] = 0.0f;
+        tree.com_z[0] = 0.0f;
         tree.first_child[0] = -1;
         tree.particle_count[0] = 0;
         tree.particle_start[0] = -1;
@@ -229,12 +227,12 @@ void computeMortonCodesKernel(
     if (tid >= num_particles) return;
 
     // Compute cube size with epsilon
-    double size = bounding_cube->size;
+    float size = bounding_cube->size;
 
     // Normalize positions to [0,1]
-    double nx = (pos_x[tid] - bounding_cube->xmin) / size;
-    double ny = (pos_y[tid] - bounding_cube->ymin) / size;
-    double nz = (pos_z[tid] - bounding_cube->zmin) / size;
+    float nx = (static_cast<float>(pos_x[tid]) - bounding_cube->xmin) / size;
+    float ny = (static_cast<float>(pos_y[tid]) - bounding_cube->ymin) / size;
+    float nz = (static_cast<float>(pos_z[tid]) - bounding_cube->zmin) / size;
 
     // Convert to 10-bit integer coordinates
     uint32_t ix = min(max(static_cast<int>(nx * 1024.0), 0), 1023);
@@ -279,19 +277,18 @@ void sortParticleDataKernel(
     const int* sorted_indices,
     const double* pos_x, const double* pos_y, const double* pos_z,
     const double* mass,
-    double* pos_x_sorted, double* pos_y_sorted, double* pos_z_sorted,
-    double* mass_sorted,
+    float* pos_x_sorted, float* pos_y_sorted, float* pos_z_sorted,
+    float* mass_sorted,
     int num_particles
 )
 {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid >= num_particles) return;
     int sorted_idx = sorted_indices[tid];
-    pos_x_sorted[tid] = pos_x[sorted_idx];
-    pos_y_sorted[tid] = pos_y[sorted_idx];
-    pos_z_sorted[tid] = pos_z[sorted_idx];
-    mass_sorted[tid] = mass[sorted_idx];
-    return;
+    pos_x_sorted[tid] = static_cast<float>(pos_x[sorted_idx]);
+    pos_y_sorted[tid] = static_cast<float>(pos_y[sorted_idx]);
+    pos_z_sorted[tid] = static_cast<float>(pos_z[sorted_idx]);
+    mass_sorted[tid]  = static_cast<float>(mass[sorted_idx]);
 }
 
 __global__
@@ -300,16 +297,16 @@ void buildOctreeLevelKernel(
     const int* queueFirst, const int* queueCount, const int* queueNodeIdx,
     int queueSize,
     int depth,
-    double* center_x, double* center_y, double* center_z,
-    double* size, double* size_sqr,
+    float* center_x, float* center_y, float* center_z,
+    float* size, float* size_sqr,
     int* first_child, int* parent,
     int* particle_start, int* particle_count,
     int* d_next_free_node,
     int* queueFirstNext, int* queueCountNext, int* queueNodeIdxNext,
     int* d_next_level_count,
     int leaf_capacity,
-    int* node_depth, double* mass,
-    double* com_x, double* com_y, double* com_z
+    int* node_depth, float* mass,
+    float* com_x, float* com_y, float* com_z
 ) {
     // Your Morton encoder uses 10 bits per axis => 10 tree levels total.
     // Depth 0 uses the topmost octant bits, depth 9 uses the last octant bits.
@@ -361,9 +358,9 @@ void buildOctreeLevelKernel(
     particle_start[parentId] = -1;
     particle_count[parentId] = 0;
 
-    double parentSize = size[parentId];
-    double childSize  = parentSize * 0.5;
-    double offset     = parentSize * 0.25;
+    float parentSize = size[parentId];
+    float childSize  = parentSize * 0.5;
+    float offset     = parentSize * 0.25;
 
     #pragma unroll
     for (int oct = 0; oct < 8; ++oct) {
@@ -501,7 +498,7 @@ void computeLeafMassCOMKernel(
 
     int start = tree.particle_start[node];
     int count = tree.particle_count[node];
-    if (count <= 0) { tree.mass[node] = 0.0; return; }
+    if (count <= 0) { tree.mass[node] = 0.0f; return; }
 
     double m_total = 0.0, com_x = 0.0, com_y = 0.0, com_z = 0.0;
     for(int i = 0; i < count; i++) {
@@ -512,14 +509,15 @@ void computeLeafMassCOMKernel(
         com_y += m * particles.pos_y_sorted[p];
         com_z += m * particles.pos_z_sorted[p];
     }
-    tree.mass[node] = m_total;
+    tree.mass[node] = static_cast<float>(m_total);
     if (m_total > 0.0) {
-        tree.com_x[node] = com_x / m_total;
-        tree.com_y[node] = com_y / m_total;
-        tree.com_z[node] = com_z / m_total;
+        tree.com_x[node] = static_cast<float>(com_x / m_total);
+        tree.com_y[node] = static_cast<float>(com_y / m_total);
+        tree.com_z[node] = static_cast<float>(com_z / m_total);
     } else {
-        tree.com_x[node] = tree.com_y[node] = tree.com_z[node] = 0.0;
+        tree.com_x[node] = tree.com_y[node] = tree.com_z[node] = 0.0f;
     }
+    
 }
 
 __global__
@@ -539,20 +537,20 @@ void computeInternalMassCOMKernel(
     #pragma unroll
     for (int i = 0; i < 8; i++) {
         int child = first + i;
-        if (tree.mass[child] == 0.0) continue;
+        if (tree.mass[child] == 0.0f) continue;
         double m = tree.mass[child];
         m_total += m;
         com_x += m * tree.com_x[child];
         com_y += m * tree.com_y[child];
         com_z += m * tree.com_z[child];
     }
-    tree.mass[node] = m_total;
+    tree.mass[node] = static_cast<float>(m_total);
     if (m_total > 0.0) {
-        tree.com_x[node] = com_x / m_total;
-        tree.com_y[node] = com_y / m_total;
-        tree.com_z[node] = com_z / m_total;
+        tree.com_x[node] = static_cast<float>(com_x / m_total);
+        tree.com_y[node] = static_cast<float>(com_y / m_total);
+        tree.com_z[node] = static_cast<float>(com_z / m_total);
     } else {
-        tree.com_x[node] = tree.com_y[node] = tree.com_z[node] = 0.0;
+        tree.com_x[node] = tree.com_y[node] = tree.com_z[node] = 0.0f;
     }
 }
 

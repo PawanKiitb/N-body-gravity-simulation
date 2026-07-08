@@ -7,6 +7,7 @@ void allocateParticles(ParticleArrays &particles, size_t num_particles)
 {
     particles.num_particles = num_particles;
     size_t bytes = num_particles * sizeof(double);
+    size_t bytes_float = num_particles * sizeof(float);
     size_t bytes_u32 = num_particles * sizeof(uint32_t);
     size_t bytes_int = num_particles * sizeof(int);
 
@@ -32,13 +33,13 @@ void allocateParticles(ParticleArrays &particles, size_t num_particles)
     cudaMalloc(&particles.particle_indices_sorted, bytes_int);
 
     // Sorted arrays for positions, mass, and accelerations
-    cudaMalloc(&particles.pos_x_sorted, bytes);
-    cudaMalloc(&particles.pos_y_sorted, bytes);
-    cudaMalloc(&particles.pos_z_sorted, bytes);
-    cudaMalloc(&particles.mass_sorted, bytes);
-    cudaMalloc(&particles.acc_x_sorted, bytes);
-    cudaMalloc(&particles.acc_y_sorted, bytes);
-    cudaMalloc(&particles.acc_z_sorted, bytes);
+    cudaMalloc(&particles.pos_x_sorted, bytes_float);
+    cudaMalloc(&particles.pos_y_sorted, bytes_float);
+    cudaMalloc(&particles.pos_z_sorted, bytes_float);
+    cudaMalloc(&particles.mass_sorted, bytes_float);
+    cudaMalloc(&particles.acc_x_sorted, bytes_float);
+    cudaMalloc(&particles.acc_y_sorted, bytes_float);
+    cudaMalloc(&particles.acc_z_sorted, bytes_float);
 }
 
 // Free device memory

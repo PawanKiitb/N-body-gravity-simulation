@@ -31,15 +31,15 @@ struct ParticleArrays
     int *particle_indices;
     int *particle_indices_sorted;
 
-    double* pos_x_sorted;
-    double* pos_y_sorted;
-    double* pos_z_sorted;
+    float* pos_x_sorted;
+    float* pos_y_sorted;
+    float* pos_z_sorted;
 
-    double* mass_sorted;
+    float* mass_sorted;
 
-    double* acc_x_sorted;
-    double* acc_y_sorted;
-    double* acc_z_sorted;
+    float* acc_x_sorted;
+    float* acc_y_sorted;
+    float* acc_z_sorted;
 };
 
 void allocateParticles(

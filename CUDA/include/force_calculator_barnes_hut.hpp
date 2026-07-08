@@ -4,18 +4,18 @@
 
 // Axis-aligned bounding box of the system
 struct Bounds {
-    double xmin, xmax;
-    double ymin, ymax;
-    double zmin, zmax;
-    double size;
+    float xmin, xmax;
+    float ymin, ymax;
+    float zmin, zmax;
+    float size;
 };
 
 // Structure holding the Barnes–Hut tree node data (all on device)
 struct TreeArrays {
-    double *center_x, *center_y, *center_z;
-    double *size, *size_sqr;
-    double *mass;
-    double *com_x, *com_y, *com_z;
+    float *center_x, *center_y, *center_z;
+    float *size, *size_sqr;
+    float *mass;
+    float *com_x, *com_y, *com_z;
     int    *first_child;    // index of first child node (-1 if leaf)
     int    *parent;         // index of parent node
     int    *particle_count; // number of particles in this node (leaf nodes)
