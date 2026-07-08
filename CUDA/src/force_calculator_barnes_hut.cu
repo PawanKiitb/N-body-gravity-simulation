@@ -1,5 +1,6 @@
 #include "../include/force_calculator_barnes_hut.hpp"
 #include <iomanip>
+#include <fstream>
 
 #define CUDA_CHECK(call)                                                     \
     do {                                                                     \
@@ -10,7 +11,6 @@
             exit(err);                                                       \
         }                                                                    \
     } while(0)
-
 
 __global__
 void computeAccelerationKernel(
@@ -234,9 +234,9 @@ void computeMortonCodesKernel(
     double nz = (pos_z[tid] - bounding_cube->zmin) / size;
 
     // Convert to 10-bit integer coordinates
-    uint32_t ix = min(max(static_cast<int>(nx * 1023.0), 0), 1023);
-    uint32_t iy = min(max(static_cast<int>(ny * 1023.0), 0), 1023);
-    uint32_t iz = min(max(static_cast<int>(nz * 1023.0), 0), 1023);
+    uint32_t ix = min(max(static_cast<int>(nx * 1024.0), 0), 1023);
+    uint32_t iy = min(max(static_cast<int>(ny * 1024.0), 0), 1023);
+    uint32_t iz = min(max(static_cast<int>(nz * 1024.0), 0), 1023);
 
     // Interleave bits to form Morton code
     uint32_t code = 0;
@@ -622,11 +622,344 @@ void BarnesHutForceCalculator::computeAccelerations(ParticleArrays& particles) {
     cudaEventElapsedTime(&traverse_ms, startEvent, stopEvent);
     traverse_tree_time_ms += traverse_ms;
 
+    dumpTree(particles, "output.txt");
     cudaEventRecord(startEvent, 0);
 
     // destroy the tree after computation
     destroyTree();
 
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float destroy_ms = 0;
+    cudaEventElapsedTime(&destroy_ms, startEvent, stopEvent);
+    destroy_tree_time_ms += destroy_ms;
+
+    total_compute_time_ms += build_ms + traverse_ms + destroy_ms;
+}
+
+// -----------------------------------------------------------------------
+// CPU (host) traversal — builds the tree on the GPU exactly as before,
+// then copies the tree + particle positions/masses to host and walks
+// the tree serially, using the SAME logic as computeAccelerationKernel.
+// -----------------------------------------------------------------------
+void BarnesHutForceCalculator::computeAccelerationsCPU(ParticleArrays& particles) {
+    if (particles.num_particles == 0) return;
+
+    int N = particles.num_particles;
+
+    cudaEventRecord(startEvent, 0);
+
+    // Build tree on GPU (unchanged)
+    buildTree(particles);
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float build_ms = 0;
+    cudaEventElapsedTime(&build_ms, startEvent, stopEvent);
+    build_tree_time_ms += build_ms;
+
+    // ---- Copy everything the traversal needs to host ----
+    int numNodes;
+    CUDA_CHECK(cudaMemcpy(&numNodes, nextFreeNode, sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<double> h_center_x(numNodes), h_center_y(numNodes), h_center_z(numNodes);
+    std::vector<double> h_size_sqr(numNodes);
+    std::vector<double> h_mass(numNodes);
+    std::vector<double> h_com_x(numNodes), h_com_y(numNodes), h_com_z(numNodes);
+    std::vector<int>    h_first_child(numNodes);
+    std::vector<int>    h_particle_start(numNodes);
+    std::vector<int>    h_particle_count(numNodes);
+
+    CUDA_CHECK(cudaMemcpy(h_center_x.data(), tree.center_x, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_center_y.data(), tree.center_y, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_center_z.data(), tree.center_z, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_size_sqr.data(), tree.size_sqr, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_mass.data(),     tree.mass,     numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_com_x.data(),    tree.com_x,    numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_com_y.data(),    tree.com_y,    numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_com_z.data(),    tree.com_z,    numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_first_child.data(),    tree.first_child,    numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_particle_start.data(), tree.particle_start, numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_particle_count.data(), tree.particle_count, numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<double> h_pos_x(N), h_pos_y(N), h_pos_z(N), h_mass_p(N);
+    CUDA_CHECK(cudaMemcpy(h_pos_x.data(), particles.pos_x, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_pos_y.data(), particles.pos_y, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_pos_z.data(), particles.pos_z, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_mass_p.data(), particles.mass, N*sizeof(double), cudaMemcpyDeviceToHost));
+
+    std::vector<int> h_sorted_idx(N);
+    CUDA_CHECK(cudaMemcpy(h_sorted_idx.data(), particles.particle_indices_sorted, N*sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<double> h_acc_x(N), h_acc_y(N), h_acc_z(N);
+
+    cudaEventRecord(startEvent, 0);
+
+    // ---- Serial CPU traversal, identical logic to computeAccelerationKernel ----
+    // Use a std::vector as the stack -- no fixed-size overflow risk here,
+    // which is the whole point of this diagnostic.
+    for (int tid = 0; tid < N; tid++) {
+        double px = h_pos_x[tid];
+        double py = h_pos_y[tid];
+        double pz = h_pos_z[tid];
+        double ax = 0.0, ay = 0.0, az = 0.0;
+
+        std::vector<int> stack;
+        stack.reserve(256);
+        stack.push_back(0);
+
+        while (!stack.empty()) {
+            int node = stack.back();
+            stack.pop_back();
+
+            if (h_mass[node] == 0.0) continue;
+
+            if (h_first_child[node] == -1) {
+                int first = h_particle_start[node];
+                int count = h_particle_count[node];
+                for (int i = 0; i < count; i++) {
+                    int other = h_sorted_idx[first + i];
+                    if (other == tid) continue;
+                    double dx = h_pos_x[other] - px;
+                    double dy = h_pos_y[other] - py;
+                    double dz = h_pos_z[other] - pz;
+                    double dist2 = dx*dx + dy*dy + dz*dz + softening_squared;
+                    double invDist = 1.0 / std::sqrt(dist2);
+                    double invDist3 = invDist * invDist * invDist;
+                    double scale = constant::G * h_mass_p[other] * invDist3;
+                    ax += dx*scale; ay += dy*scale; az += dz*scale;
+                }
+                continue;
+            }
+
+            int containingChild = 0;
+            if (px >= h_center_x[node]) containingChild |= 4;
+            if (py >= h_center_y[node]) containingChild |= 2;
+            if (pz >= h_center_z[node]) containingChild |= 1;
+
+            int firstChild = h_first_child[node];
+            for (int i = 0; i < 8; i++) {
+                int child = firstChild + i;
+                if (h_mass[child] == 0.0) continue;
+                if (i == containingChild) {
+                    stack.push_back(child);
+                    continue;
+                }
+                double dx = h_com_x[child] - px;
+                double dy = h_com_y[child] - py;
+                double dz = h_com_z[child] - pz;
+                double dist2 = dx*dx + dy*dy + dz*dz;
+                if (h_size_sqr[child] < theta_sqr * dist2) {
+                    double invDist = 1.0 / std::sqrt(dist2 + softening_squared);
+                    double invDist3 = invDist * invDist * invDist;
+                    double scale = constant::G * h_mass[child] * invDist3;
+                    ax += dx*scale; ay += dy*scale; az += dz*scale;
+                } else {
+                    stack.push_back(child);
+                }
+            }
+        }
+
+        h_acc_x[tid] = ax;
+        h_acc_y[tid] = ay;
+        h_acc_z[tid] = az;
+    }
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float traverse_ms = 0;
+    cudaEventElapsedTime(&traverse_ms, startEvent, stopEvent);
+    traverse_tree_time_ms += traverse_ms; // not meaningful for host time, ignore for timing purposes
+
+    // Copy results back to device so downstream code (comparison, dumpTree, etc.)
+    // works exactly as before.
+    CUDA_CHECK(cudaMemcpy(particles.acc_x, h_acc_x.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(particles.acc_y, h_acc_y.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(particles.acc_z, h_acc_z.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+
+    cudaEventRecord(startEvent, 0);
+    destroyTree();
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float destroy_ms = 0;
+    cudaEventElapsedTime(&destroy_ms, startEvent, stopEvent);
+    destroy_tree_time_ms += destroy_ms;
+
+    total_compute_time_ms += build_ms + traverse_ms + destroy_ms;
+}
+
+void BarnesHutForceCalculator::computeAccelerationsCPU2(ParticleArrays& particles) {
+    if (particles.num_particles == 0) return;
+    int N = particles.num_particles;
+
+    cudaEventRecord(startEvent, 0);
+
+    // --- Build tree STRUCTURE on GPU only (no mass/COM) ---
+    computeBoundingBox(particles);
+    initializeRootKernel<<<1, 1>>>(d_bounding_cube, tree, nextFreeNode);
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (N + constant::BLOCK_SIZE - 1) / constant::BLOCK_SIZE;
+    computeMortonCodesKernel<<<blocksPerGrid, threadsPerBlock>>>(
+        particles.pos_x, particles.pos_y, particles.pos_z, d_bounding_cube,
+        particles.morton_codes, particles.particle_indices, N
+    );
+    radixSort(particles);
+    buildOctree(particles.morton_codes_sorted, N, tree, nextFreeNode);
+    // NOTE: computeMassCOM(particles) is intentionally NOT called here.
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float build_ms = 0;
+    cudaEventElapsedTime(&build_ms, startEvent, stopEvent);
+    build_tree_time_ms += build_ms;
+
+    // --- Copy tree STRUCTURE (no mass/com yet -- we'll compute those on host) ---
+    int numNodes;
+    CUDA_CHECK(cudaMemcpy(&numNodes, nextFreeNode, sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<double> h_center_x(numNodes), h_center_y(numNodes), h_center_z(numNodes);
+    std::vector<double> h_size_sqr(numNodes);
+    std::vector<int>    h_first_child(numNodes);
+    std::vector<int>    h_particle_start(numNodes);
+    std::vector<int>    h_particle_count(numNodes);
+    std::vector<int>    h_node_depth(numNodes);
+
+    CUDA_CHECK(cudaMemcpy(h_center_x.data(), tree.center_x, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_center_y.data(), tree.center_y, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_center_z.data(), tree.center_z, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_size_sqr.data(), tree.size_sqr, numNodes*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_first_child.data(),    tree.first_child,    numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_particle_start.data(), tree.particle_start, numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_particle_count.data(), tree.particle_count, numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_node_depth.data(),     tree.node_depth,     numNodes*sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::vector<double> h_pos_x(N), h_pos_y(N), h_pos_z(N), h_mass_p(N);
+    CUDA_CHECK(cudaMemcpy(h_pos_x.data(), particles.pos_x, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_pos_y.data(), particles.pos_y, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_pos_z.data(), particles.pos_z, N*sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_mass_p.data(), particles.mass, N*sizeof(double), cudaMemcpyDeviceToHost));
+
+    std::vector<int> h_sorted_idx(N);
+    CUDA_CHECK(cudaMemcpy(h_sorted_idx.data(), particles.particle_indices_sorted, N*sizeof(int), cudaMemcpyDeviceToHost));
+
+    // --- Compute mass/COM on host, bottom-up by depth ---
+    std::vector<double> h_mass(numNodes, 0.0);
+    std::vector<double> h_com_x(numNodes, 0.0), h_com_y(numNodes, 0.0), h_com_z(numNodes, 0.0);
+
+    int maxDepth = 0;
+    for (int i = 0; i < numNodes; i++) maxDepth = std::max(maxDepth, h_node_depth[i]);
+
+    for (int d = maxDepth; d >= 0; --d) {
+        for (int node = 0; node < numNodes; node++) {
+            if (h_node_depth[node] != d) continue;
+            if (h_first_child[node] == -1) {
+                int start = h_particle_start[node];
+                int count = h_particle_count[node];
+                if (count <= 0) { h_mass[node] = 0.0; continue; }
+                double m_total = 0.0, cx = 0.0, cy = 0.0, cz = 0.0;
+                for (int i = 0; i < count; i++) {
+                    int p = h_sorted_idx[start + i];
+                    double m = h_mass_p[p];
+                    m_total += m;
+                    cx += m * h_pos_x[p];
+                    cy += m * h_pos_y[p];
+                    cz += m * h_pos_z[p];
+                }
+                h_mass[node] = m_total;
+                if (m_total > 0.0) {
+                    h_com_x[node] = cx / m_total;
+                    h_com_y[node] = cy / m_total;
+                    h_com_z[node] = cz / m_total;
+                }
+            } else {
+                double m_total = 0.0, cx = 0.0, cy = 0.0, cz = 0.0;
+                int first = h_first_child[node];
+                for (int i = 0; i < 8; i++) {
+                    int child = first + i;
+                    if (h_mass[child] == 0.0) continue;
+                    double m = h_mass[child];
+                    m_total += m;
+                    cx += m * h_com_x[child];
+                    cy += m * h_com_y[child];
+                    cz += m * h_com_z[child];
+                }
+                h_mass[node] = m_total;
+                if (m_total > 0.0) {
+                    h_com_x[node] = cx / m_total;
+                    h_com_y[node] = cy / m_total;
+                    h_com_z[node] = cz / m_total;
+                }
+            }
+        }
+    }
+
+    std::vector<double> h_acc_x(N), h_acc_y(N), h_acc_z(N);
+
+    cudaEventRecord(startEvent, 0);
+
+    // --- Traversal on host (same as before) ---
+    for (int tid = 0; tid < N; tid++) {
+        double px = h_pos_x[tid], py = h_pos_y[tid], pz = h_pos_z[tid];
+        double ax = 0.0, ay = 0.0, az = 0.0;
+        std::vector<int> stack; stack.reserve(256); stack.push_back(0);
+
+        while (!stack.empty()) {
+            int node = stack.back(); stack.pop_back();
+            if (h_mass[node] == 0.0) continue;
+
+            if (h_first_child[node] == -1) {
+                int first = h_particle_start[node];
+                int count = h_particle_count[node];
+                for (int i = 0; i < count; i++) {
+                    int other = h_sorted_idx[first + i];
+                    if (other == tid) continue;
+                    double dx = h_pos_x[other] - px, dy = h_pos_y[other] - py, dz = h_pos_z[other] - pz;
+                    double dist2 = dx*dx + dy*dy + dz*dz + softening_squared;
+                    double invDist = 1.0 / std::sqrt(dist2);
+                    double invDist3 = invDist*invDist*invDist;
+                    double scale = constant::G * h_mass_p[other] * invDist3;
+                    ax += dx*scale; ay += dy*scale; az += dz*scale;
+                }
+                continue;
+            }
+
+            int containingChild = 0;
+            if (px >= h_center_x[node]) containingChild |= 4;
+            if (py >= h_center_y[node]) containingChild |= 2;
+            if (pz >= h_center_z[node]) containingChild |= 1;
+
+            int firstChild = h_first_child[node];
+            for (int i = 0; i < 8; i++) {
+                int child = firstChild + i;
+                if (h_mass[child] == 0.0) continue;
+                if (i == containingChild) { stack.push_back(child); continue; }
+                double dx = h_com_x[child] - px, dy = h_com_y[child] - py, dz = h_com_z[child] - pz;
+                double dist2 = dx*dx + dy*dy + dz*dz;
+                if (h_size_sqr[child] < theta_sqr * dist2) {
+                    double invDist = 1.0 / std::sqrt(dist2 + softening_squared);
+                    double invDist3 = invDist*invDist*invDist;
+                    double scale = constant::G * h_mass[child] * invDist3;
+                    ax += dx*scale; ay += dy*scale; az += dz*scale;
+                } else {
+                    stack.push_back(child);
+                }
+            }
+        }
+        h_acc_x[tid] = ax; h_acc_y[tid] = ay; h_acc_z[tid] = az;
+    }
+
+    cudaEventRecord(stopEvent, 0);
+    cudaEventSynchronize(stopEvent);
+    float traverse_ms = 0;
+    cudaEventElapsedTime(&traverse_ms, startEvent, stopEvent);
+    traverse_tree_time_ms += traverse_ms;
+
+    CUDA_CHECK(cudaMemcpy(particles.acc_x, h_acc_x.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(particles.acc_y, h_acc_y.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(particles.acc_z, h_acc_z.data(), N*sizeof(double), cudaMemcpyHostToDevice));
+
+    cudaEventRecord(startEvent, 0);
+    destroyTree();
     cudaEventRecord(stopEvent, 0);
     cudaEventSynchronize(stopEvent);
     float destroy_ms = 0;

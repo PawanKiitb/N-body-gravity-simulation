@@ -102,6 +102,8 @@ public:
 
     // Compute accelerations for all particles (implements ForceCalculator)
     void computeAccelerations(ParticleArrays& particles) override;
+    void computeAccelerationsCPU(ParticleArrays& particles);
+    void computeAccelerationsCPU2(ParticleArrays& particles);
 
     // Tree-building helpers
     void buildTree(ParticleArrays& particles);
