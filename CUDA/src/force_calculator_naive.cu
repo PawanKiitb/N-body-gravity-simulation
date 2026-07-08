@@ -1,73 +1,61 @@
 #include "../include/force_calculator_naive.hpp"
 
-__global__ 
+
+__global__
 void computeAccelerationNaiveKernel(
     const double *pos_x, const double *pos_y, const double *pos_z,
     double *acc_x, double *acc_y, double *acc_z,
     const double *mass, int num_particles,
     double softening_squared
-) 
+)
 {
-    // firstly, we declare shared memory arrays to hold the positions and masses of particles in the current tile
     __shared__ double shared_pos_x[constant::TILE_SIZE];
     __shared__ double shared_pos_y[constant::TILE_SIZE];
     __shared__ double shared_pos_z[constant::TILE_SIZE];
     __shared__ double shared_mass[constant::TILE_SIZE];
-    
-    // declare the thread id for the current thread
+
     const int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    const bool valid = tid < num_particles;
 
-    // if the thread id is greater than or equal to the number of particles, we return from the kernel
-    if(tid >= num_particles) return;
-    
-    // load the position of the current particle into local variables
-    // Each thread will call its own particle's position and mass from global memory
-    // we store the position of the current particle in local variables(registers) for faster access
-    const double my_pos_x = pos_x[tid];
-    const double my_pos_y = pos_y[tid];
-    const double my_pos_z = pos_z[tid];
+    const double my_pos_x = valid ? pos_x[tid] : 0.0;
+    const double my_pos_y = valid ? pos_y[tid] : 0.0;
+    const double my_pos_z = valid ? pos_z[tid] : 0.0;
 
-    double acc_x_local = 0.0;
-    double acc_y_local = 0.0;
-    double acc_z_local = 0.0;
+    double acc_x_local = 0.0, acc_y_local = 0.0, acc_z_local = 0.0;
 
-    for(int tile_start = 0; tile_start < num_particles; tile_start += constant::TILE_SIZE) {
-        // is the current thread's index within the tile?
+    for (int tile_start = 0; tile_start < num_particles; tile_start += constant::TILE_SIZE) {
         int j = tile_start + threadIdx.x;
-
-        // if it is, we load the position and mass of the particle into shared memory
-        if(j < num_particles) {
+        if (j < num_particles) {
             shared_pos_x[threadIdx.x] = pos_x[j];
             shared_pos_y[threadIdx.x] = pos_y[j];
             shared_pos_z[threadIdx.x] = pos_z[j];
             shared_mass[threadIdx.x] = mass[j];
         }
-        // let all threads come here and wait for the shared memory to be populated before proceeding
-        __syncthreads();
+        __syncthreads();   // now ALL threads in the block reach this, every time
 
-        // now we are done with loading the shared memory, we can compute the acceleration for the current particle from the particles in the current tile
-        for(j = 0; j < constant::TILE_SIZE && (tile_start + j) < num_particles; ++j) {
-            if(tid == tile_start + j) continue; // skip self-interaction
-            double dx = shared_pos_x[j] - my_pos_x;
-            double dy = shared_pos_y[j] - my_pos_y;
-            double dz = shared_pos_z[j] - my_pos_z;
-            double dist_sqr = dx * dx + dy * dy + dz * dz + softening_squared;
-            double inv_dist = 1.0 / sqrt(dist_sqr);
-            double inv_dist3 = inv_dist * inv_dist * inv_dist;
-            double force = constant::G * shared_mass[j] * inv_dist3;
-            acc_x_local += dx * force;
-            acc_y_local += dy * force;
-            acc_z_local += dz * force;
+        if (valid) {
+            for (j = 0; j < constant::TILE_SIZE && (tile_start + j) < num_particles; ++j) {
+                if (tid == tile_start + j) continue;
+                double dx = shared_pos_x[j] - my_pos_x;
+                double dy = shared_pos_y[j] - my_pos_y;
+                double dz = shared_pos_z[j] - my_pos_z;
+                double dist_sqr = dx*dx + dy*dy + dz*dz + softening_squared;
+                double inv_dist = 1.0 / sqrt(dist_sqr);
+                double inv_dist3 = inv_dist * inv_dist * inv_dist;
+                double force = constant::G * shared_mass[j] * inv_dist3;
+                acc_x_local += dx * force;
+                acc_y_local += dy * force;
+                acc_z_local += dz * force;
+            }
         }
-        // let all threads come here and wait for the shared memory to be populated before proceeding to the next tile
-        __syncthreads();
+        __syncthreads();   // ALL threads reach this too
     }
 
-    // store the computed acceleration in global memory
-    acc_x[tid] = acc_x_local;
-    acc_y[tid] = acc_y_local;
-    acc_z[tid] = acc_z_local;
-    return;
+    if (valid) {
+        acc_x[tid] = acc_x_local;
+        acc_y[tid] = acc_y_local;
+        acc_z[tid] = acc_z_local;
+    }
 }
 
 void ForceCalculatorNaive::computeAccelerations(ParticleArrays& particles) {
