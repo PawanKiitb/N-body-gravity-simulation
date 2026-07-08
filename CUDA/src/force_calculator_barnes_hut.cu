@@ -23,9 +23,9 @@ void computeAccelerationKernel(
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid >= particles.num_particles) return;
 
-    double px = particles.pos_x[tid];
-    double py = particles.pos_y[tid];
-    double pz = particles.pos_z[tid];
+    double px = particles.pos_x_sorted[tid];
+    double py = particles.pos_y_sorted[tid];
+    double pz = particles.pos_z_sorted[tid];
     double ax = 0.0, ay = 0.0, az = 0.0;
 
     constexpr int STACK_SIZE = 128;
@@ -41,15 +41,15 @@ void computeAccelerationKernel(
             int first = tree.particle_start[node];
             int count = tree.particle_count[node];
             for(int i=0;i<count;i++) {
-                int other = particles.particle_indices_sorted[first+i];
+                int other = first + i;              // direct sorted-space index, no lookup needed
                 if(other == tid) continue;
-                double dx = particles.pos_x[other] - px;
-                double dy = particles.pos_y[other] - py;
-                double dz = particles.pos_z[other] - pz;
+                double dx = particles.pos_x_sorted[other] - px;
+                double dy = particles.pos_y_sorted[other] - py;
+                double dz = particles.pos_z_sorted[other] - pz;
                 double dist2 = dx*dx + dy*dy + dz*dz + softening_squared;
                 double invDist = rsqrt(dist2);
                 double invDist3 = invDist * invDist * invDist;
-                double scale = constant::G * particles.mass[other] * invDist3;
+                double scale = constant::G * particles.mass_sorted[other] * invDist3;
                 ax += dx*scale; ay += dy*scale; az += dz*scale;
             }
             continue;
@@ -78,11 +78,6 @@ void computeAccelerationKernel(
             if (mustDescend && top < STACK_SIZE) {
                 stack[top++] = child;
             } else {
-                // Either MAC says approximate, OR the stack is full and we
-                // MUST NOT overflow it — approximate as a last resort even
-                // for the containing child. This trades a bit of accuracy
-                // in the (now extremely rare) overflow case for guaranteed
-                // memory safety, instead of silently corrupting results.
                 double invDist = rsqrt(dist2 + softening_squared);
                 double invDist3 = invDist * invDist * invDist;
                 double scale = constant::G * tree.mass[child] * invDist3;
@@ -90,9 +85,25 @@ void computeAccelerationKernel(
             }
         }
     }
-    particles.acc_x[tid] = ax;
-    particles.acc_y[tid] = ay; // <-- careful, see note below
-    particles.acc_z[tid] = az;
+    particles.acc_x_sorted[tid] = ax;
+    particles.acc_y_sorted[tid] = ay;
+    particles.acc_z_sorted[tid] = az;
+}
+
+__global__
+void indexAccelerationKernel(
+    ParticleArrays particles,
+    const double* acc_x_sorted, const double* acc_y_sorted, const double* acc_z_sorted
+)
+{
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tid >= particles.num_particles) return;
+
+    int sorted_idx = particles.particle_indices_sorted[tid];
+    particles.acc_x[sorted_idx] = acc_x_sorted[tid];
+    particles.acc_y[sorted_idx] = acc_y_sorted[tid];
+    particles.acc_z[sorted_idx] = acc_z_sorted[tid];
+    return 0;
 }
 
 // Compute axis-aligned bounding box (min/max) of positions on device
@@ -263,6 +274,25 @@ void BarnesHutForceCalculator::radixSort(ParticleArrays& particles) {
     );
 }
 
+__global__
+void sortParticleDataKernel(
+    const int* sorted_indices,
+    const double* pos_x, const double* pos_y, const double* pos_z,
+    const double* mass,
+    double* pos_x_sorted, double* pos_y_sorted, double* pos_z_sorted,
+    double* mass_sorted,
+    int num_particles
+)
+{
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tid >= num_particles) return;
+    int sorted_idx = sorted_indices[tid];
+    pos_x_sorted[tid] = pos_x[sorted_idx];
+    pos_y_sorted[tid] = pos_y[sorted_idx];
+    pos_z_sorted[tid] = pos_z[sorted_idx];
+    mass_sorted[tid] = mass[sorted_idx];
+    return;
+}
 
 __global__
 void buildOctreeLevelKernel(
@@ -460,8 +490,9 @@ void BarnesHutForceCalculator::buildOctree(
 
 __global__
 void computeLeafMassCOMKernel(
-    ParticleArrays particles, TreeArrays tree, const int* sorted_particle_indices, int num_nodes
-) {
+    ParticleArrays particles, TreeArrays tree, int num_nodes
+)
+{
     int node = blockIdx.x * blockDim.x + threadIdx.x;
     if (node >= num_nodes) return;
 
@@ -474,12 +505,12 @@ void computeLeafMassCOMKernel(
 
     double m_total = 0.0, com_x = 0.0, com_y = 0.0, com_z = 0.0;
     for(int i = 0; i < count; i++) {
-        int p = sorted_particle_indices[start + i];
-        double m = particles.mass[p];
+        int p = start + i;
+        double m = particles.mass_sorted[p];
         m_total += m;
-        com_x += m * particles.pos_x[p];
-        com_y += m * particles.pos_y[p];
-        com_z += m * particles.pos_z[p];
+        com_x += m * particles.pos_x_sorted[p];
+        com_y += m * particles.pos_y_sorted[p];
+        com_z += m * particles.pos_z_sorted[p];
     }
     tree.mass[node] = m_total;
     if (m_total > 0.0) {
@@ -535,9 +566,7 @@ void BarnesHutForceCalculator::computeMassCOM(ParticleArrays& particles) {
     int blocks = (num_nodes + threads - 1) / threads;
 
     // First, compute mass and COM for leaf nodes
-    computeLeafMassCOMKernel<<<blocks, threads>>>(
-        particles, tree, particles.particle_indices_sorted, num_nodes
-    );
+    computeLeafMassCOMKernel<<<blocks, threads>>>(particles, tree, num_nodes);
     CUDA_CHECK(cudaDeviceSynchronize());
 
     // Then compute internal nodes bottom-up
@@ -562,6 +591,14 @@ void BarnesHutForceCalculator::buildTree(ParticleArrays& particles) {
 
     // Radix Sort
     radixSort(particles);
+
+    // sort the particle data based on the sorted indices
+    sortParticleDataKernel<<<blocksPerGrid, threadsPerBlock>>>(
+        particles.particle_indices_sorted,
+        particles.pos_x, particles.pos_y, particles.pos_z, particles.mass,
+        particles.pos_x_sorted, particles.pos_y_sorted, particles.pos_z_sorted, particles.mass_sorted,
+        particles.num_particles
+    );
 
     // Build the octree using BFS traversal
     buildOctree(particles.morton_codes_sorted, particles.num_particles, tree, nextFreeNode);
@@ -606,6 +643,10 @@ void BarnesHutForceCalculator::computeAccelerations(ParticleArrays& particles) {
     int blocks = (particles.num_particles + threads - 1) / threads;
     computeAccelerationKernel<<<blocks, threads>>>(
         particles, tree, theta_sqr, softening_squared
+    );
+    // another kernel which now indexes the acceleration arrays properly
+    indexAccelerationKernel<<<blocks, threads>>>(
+        particles, particles.acc_x_sorted, particles.acc_y_sorted, particles.acc_z_sorted
     );
 
     cudaEventRecord(stopEvent, 0);

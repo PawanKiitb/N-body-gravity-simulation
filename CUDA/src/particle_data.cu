@@ -30,6 +30,15 @@ void allocateParticles(ParticleArrays &particles, size_t num_particles)
     cudaMalloc(&particles.morton_codes_sorted, bytes_u32);
     cudaMalloc(&particles.particle_indices, bytes_int);
     cudaMalloc(&particles.particle_indices_sorted, bytes_int);
+
+    // Sorted arrays for positions, mass, and accelerations
+    cudaMalloc(&particles.pos_x_sorted, bytes);
+    cudaMalloc(&particles.pos_y_sorted, bytes);
+    cudaMalloc(&particles.pos_z_sorted, bytes);
+    cudaMalloc(&particles.mass_sorted, bytes);
+    cudaMalloc(&particles.acc_x_sorted, bytes);
+    cudaMalloc(&particles.acc_y_sorted, bytes);
+    cudaMalloc(&particles.acc_z_sorted, bytes);
 }
 
 // Free device memory
@@ -59,6 +68,14 @@ void freeParticles(ParticleArrays &particles)
     cudaFree(particles.particle_indices);
     cudaFree(particles.particle_indices_sorted);
 
+    cudaFree(particles.pos_x_sorted);
+    cudaFree(particles.pos_y_sorted);
+    cudaFree(particles.pos_z_sorted);
+    cudaFree(particles.mass_sorted);
+    cudaFree(particles.acc_x_sorted);
+    cudaFree(particles.acc_y_sorted);
+    cudaFree(particles.acc_z_sorted);
+
     // Reset particle count and pointers
     particles.num_particles = 0;
     particles.pos_x = particles.pos_y = particles.pos_z = nullptr;
@@ -68,6 +85,9 @@ void freeParticles(ParticleArrays &particles)
     particles.mass = nullptr;
     particles.morton_codes = particles.morton_codes_sorted = nullptr;
     particles.particle_indices = particles.particle_indices_sorted = nullptr;
+    particles.pos_x_sorted = particles.pos_y_sorted = particles.pos_z_sorted = nullptr;
+    particles.mass_sorted = nullptr;
+    particles.acc_x_sorted = particles.acc_y_sorted = particles.acc_z_sorted = nullptr;
 }
 
 // Copy data from host arrays to device arrays
