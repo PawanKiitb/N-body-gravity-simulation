@@ -28,7 +28,7 @@ void computeAccelerationKernel(
     float pz = particles.pos_z_sorted[tid];
     float ax = 0.0f, ay = 0.0f, az = 0.0f;
 
-    constexpr int STACK_SIZE = 128;
+    constexpr int STACK_SIZE = 50;
     int stack[STACK_SIZE];
     int top = 0;
     stack[top++] = 0;
@@ -465,6 +465,12 @@ void BarnesHutForceCalculator::buildOctree(
         );
         CUDA_CHECK(cudaGetLastError());
         CUDA_CHECK(cudaDeviceSynchronize());
+        
+        level_counts[depth] = numCurrent;
+        if (level_node_ids[depth] == nullptr) {
+            CUDA_CHECK(cudaMalloc(&level_node_ids[depth], sizeof(int) * num_particles)); // sized once, reused every frame
+        }
+        CUDA_CHECK(cudaMemcpyAsync(level_node_ids[depth], d_qIdxCur, sizeof(int) * numCurrent, cudaMemcpyDeviceToDevice));
 
         // Read how many children were added
         CUDA_CHECK(cudaMemcpy(&numCurrent, d_next_level_count, sizeof(int), cudaMemcpyDeviceToHost));
@@ -522,14 +528,11 @@ void computeLeafMassCOMKernel(
 
 __global__
 void computeInternalMassCOMKernel(
-    TreeArrays tree, int num_nodes, int current_depth
+    TreeArrays tree, const int* node_ids, int level_count
 ) {
-    int node = blockIdx.x * blockDim.x + threadIdx.x;
-    if (node >= num_nodes) return;
-
-    // Only process nodes at this depth that are internal
-    if (tree.node_depth[node] != current_depth) return;
-    if (tree.first_child[node] == -1) return;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= level_count) return;
+    int node = node_ids[idx];   // direct lookup, no depth-scan needed
 
     double m_total = 0.0, com_x = 0.0, com_y = 0.0, com_z = 0.0;
     int first = tree.first_child[node];
@@ -556,24 +559,23 @@ void computeInternalMassCOMKernel(
 
 
 void BarnesHutForceCalculator::computeMassCOM(ParticleArrays& particles) {
-    // Get total number of nodes created
     int num_nodes;
     CUDA_CHECK(cudaMemcpy(&num_nodes, nextFreeNode, sizeof(int), cudaMemcpyDeviceToHost));
 
     int threads = constant::BLOCK_SIZE;
     int blocks = (num_nodes + threads - 1) / threads;
 
-    // First, compute mass and COM for leaf nodes
     computeLeafMassCOMKernel<<<blocks, threads>>>(particles, tree, num_nodes);
     CUDA_CHECK(cudaDeviceSynchronize());
 
-    // Then compute internal nodes bottom-up
     for(int depth = constant::MAX_DEPTH - 1; depth >= 0; --depth) {
-        computeInternalMassCOMKernel<<<blocks, threads>>>(tree, num_nodes, depth);
+        int count = level_counts[depth];
+        if (count == 0) continue;  // skip levels that don't exist for this frame's tree
+        int lvl_blocks = (count + threads - 1) / threads;
+        computeInternalMassCOMKernel<<<lvl_blocks, threads>>>(tree, level_node_ids[depth], count);
         CUDA_CHECK(cudaDeviceSynchronize());
     }
 }
-
 
 void BarnesHutForceCalculator::buildTree(ParticleArrays& particles) {
     // compute the bounding box of the particles

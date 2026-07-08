@@ -48,6 +48,10 @@ struct BarnesHutForceCalculator : public ForceCalculator {
     TreeArrays tree;
     int* nextFreeNode;  // pointer to next free node index on device
 
+    // COM
+    int* level_node_ids[constant::MAX_DEPTH] = {nullptr};
+    int  level_counts[constant::MAX_DEPTH] = {0};
+
 public:
     BarnesHutForceCalculator(double softening, double theta, int leaf_capacity = constant::LEAF_CAPACITY)
         : softening_squared(softening * softening), theta_sqr(theta*theta),
@@ -98,6 +102,10 @@ public:
         // Free temporary storages if allocated
         if (bounding_box_temp_storage) cudaFree(bounding_box_temp_storage);
         if (radix_sort_temp_storage)  cudaFree(radix_sort_temp_storage);
+        // Free level node IDs
+        for (int i = 0; i < constant::MAX_DEPTH; ++i) {
+            if (level_node_ids[i]) cudaFree(level_node_ids[i]);
+        }
     }
 
     // Compute accelerations for all particles (implements ForceCalculator)

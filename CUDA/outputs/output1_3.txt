@@ -1,0 +1,163 @@
+make build/obj/force_calculator_barnes_hut.o build/obj/force_calculator_naive.o build/obj/integrator_euler-cromer.o build/obj/integrator_euler.o build/obj/integrator_leafrog.o build/obj/integrator_velocity_verlet.o build/obj/particle_data.o
+make[1]: Entering directory '/content/N-body-gravity-simulation/CUDA'
+make[1]: 'build/obj/force_calculator_barnes_hut.o' is up to date.
+make[1]: 'build/obj/force_calculator_naive.o' is up to date.
+make[1]: 'build/obj/integrator_euler-cromer.o' is up to date.
+make[1]: 'build/obj/integrator_euler.o' is up to date.
+make[1]: 'build/obj/integrator_leafrog.o' is up to date.
+make[1]: 'build/obj/integrator_velocity_verlet.o' is up to date.
+make[1]: 'build/obj/particle_data.o' is up to date.
+make[1]: Leaving directory '/content/N-body-gravity-simulation/CUDA'
+nvcc -std=c++17 -O3 -arch=sm_75 -MMD -MP -Iinclude -c tests/test5_BarnesHutBenchmark.cu -o build/obj/tests/test5_BarnesHutBenchmark.o
+nvcc -std=c++17 -O3 -arch=sm_75 \
+	build/obj/force_calculator_barnes_hut.o build/obj/force_calculator_naive.o build/obj/integrator_euler-cromer.o build/obj/integrator_euler.o build/obj/integrator_leafrog.o build/obj/integrator_velocity_verlet.o build/obj/particle_data.o build/obj/tests/test5_BarnesHutBenchmark.o \
+	-o build/test5
+./build/test5
+
+=====================================================
+Run 1
+=====================================================
+
+=========================================
+Particles : 100
+=========================================
+
+Barnes-Hut
+Total Time : 44.5581 ms, Average : 0.445581 ms
+Tree Build : 27.6091 ms, Average : 0.276091 ms
+Traversal  : 16.2545 ms, Average : 0.162545 ms
+Destroy    : 0.694432 ms, Average : 0.00694432 ms
+
+=========================================
+Particles : 500
+=========================================
+
+Barnes-Hut
+Total Time : 87.6987 ms, Average : 0.876987 ms
+Tree Build : 45.2282 ms, Average : 0.452282 ms
+Traversal  : 41.2152 ms, Average : 0.412152 ms
+Destroy    : 1.25539 ms, Average : 0.0125539 ms
+
+=========================================
+Particles : 1000
+=========================================
+
+Barnes-Hut
+Total Time : 90.4917 ms, Average : 0.904917 ms
+Tree Build : 47.5435 ms, Average : 0.475435 ms
+Traversal  : 41.8857 ms, Average : 0.418857 ms
+Destroy    : 1.06253 ms, Average : 0.0106253 ms
+
+=========================================
+Particles : 5000
+=========================================
+
+Barnes-Hut
+Total Time : 190.198 ms, Average : 1.90198 ms
+Tree Build : 106.164 ms, Average : 1.06164 ms
+Traversal  : 82.5602 ms, Average : 0.825602 ms
+Destroy    : 1.4743 ms, Average : 0.014743 ms
+
+=========================================
+Particles : 10000
+=========================================
+
+Barnes-Hut
+Total Time : 260.734 ms, Average : 2.60734 ms
+Tree Build : 149.6 ms, Average : 1.496 ms
+Traversal  : 110.361 ms, Average : 1.10361 ms
+Destroy    : 0.773632 ms, Average : 0.00773632 ms
+
+=========================================
+Particles : 50000
+=========================================
+
+Barnes-Hut
+Total Time : 1169.06 ms, Average : 11.6906 ms
+Tree Build : 557.666 ms, Average : 5.57666 ms
+Traversal  : 610.517 ms, Average : 6.10517 ms
+Destroy    : 0.876672 ms, Average : 0.00876672 ms
+
+=========================================
+Particles : 100000
+=========================================
+
+Barnes-Hut
+Total Time : 2471.56 ms, Average : 24.7156 ms
+Tree Build : 1194.35 ms, Average : 11.9435 ms
+Traversal  : 1276.21 ms, Average : 12.7621 ms
+Destroy    : 0.995392 ms, Average : 0.00995392 ms
+
+=====================================================
+Run 2
+=====================================================
+
+=========================================
+Particles : 100
+=========================================
+
+Barnes-Hut
+Total Time : 33.0648 ms, Average : 0.330648 ms
+Tree Build : 21.2814 ms, Average : 0.212814 ms
+Traversal  : 11.2359 ms, Average : 0.112359 ms
+Destroy    : 0.54752 ms, Average : 0.0054752 ms
+
+=========================================
+Particles : 500
+=========================================
+
+Barnes-Hut
+Total Time : 56.2814 ms, Average : 0.562814 ms
+Tree Build : 27.727 ms, Average : 0.27727 ms
+Traversal  : 28.0917 ms, Average : 0.280917 ms
+Destroy    : 0.462688 ms, Average : 0.00462688 ms
+
+=========================================
+Particles : 1000
+=========================================
+
+Barnes-Hut
+Total Time : 70.3145 ms, Average : 0.703145 ms
+Tree Build : 32.6882 ms, Average : 0.326882 ms
+Traversal  : 37.1562 ms, Average : 0.371562 ms
+Destroy    : 0.470112 ms, Average : 0.00470112 ms
+
+=========================================
+Particles : 5000
+=========================================
+
+Barnes-Hut
+Total Time : 175.322 ms, Average : 1.75322 ms
+Tree Build : 90.0442 ms, Average : 0.900442 ms
+Traversal  : 84.7342 ms, Average : 0.847342 ms
+Destroy    : 0.54352 ms, Average : 0.0054352 ms
+
+=========================================
+Particles : 10000
+=========================================
+
+Barnes-Hut
+Total Time : 257.637 ms, Average : 2.57637 ms
+Tree Build : 147.048 ms, Average : 1.47048 ms
+Traversal  : 109.888 ms, Average : 1.09888 ms
+Destroy    : 0.700992 ms, Average : 0.00700992 ms
+
+=========================================
+Particles : 50000
+=========================================
+
+Barnes-Hut
+Total Time : 1169.71 ms, Average : 11.6971 ms
+Tree Build : 558.18 ms, Average : 5.5818 ms
+Traversal  : 610.597 ms, Average : 6.10597 ms
+Destroy    : 0.934048 ms, Average : 0.00934048 ms
+
+=========================================
+Particles : 100000
+=========================================
+
+Barnes-Hut
+Total Time : 2477.65 ms, Average : 24.7765 ms
+Tree Build : 1193.4 ms, Average : 11.934 ms
+Traversal  : 1283.26 ms, Average : 12.8326 ms
+Destroy    : 0.990624 ms, Average : 0.00990624 ms
