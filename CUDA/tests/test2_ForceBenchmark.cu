@@ -15,15 +15,16 @@ int main()
     std::uniform_real_distribution<double> massDist(0.5, 2.0);
 
     std::vector<int> particleCounts =
-    {
-        100,
-        500,
-        1000,
-        5000,
-        10000
-    };
+        {
+            100,
+            500,
+            1000,
+            5000,
+            10000,
+            50000,
+            100000};
 
-    for(int run = 0; run < 2; run++)
+    for (int run = 0; run < 2; run++)
     {
         std::cout
             << "\n=====================================================\n";
@@ -32,7 +33,7 @@ int main()
         std::cout
             << "=====================================================\n";
 
-        for(int N : particleCounts)
+        for (int N : particleCounts)
         {
             std::cout
                 << "\n=========================================\n";
@@ -57,7 +58,7 @@ int main()
 
             std::vector<double> h_mass(N);
 
-            for(int i = 0; i < N; i++)
+            for (int i = 0; i < N; i++)
             {
                 h_pos_x[i] = position(rng);
                 h_pos_y[i] = position(rng);
@@ -73,8 +74,7 @@ int main()
                 h_vel_x.data(),
                 h_vel_y.data(),
                 h_vel_z.data(),
-                h_mass.data()
-            );
+                h_mass.data());
 
             copyParticlesToDevice(
                 bhParticles,
@@ -84,14 +84,13 @@ int main()
                 h_vel_x.data(),
                 h_vel_y.data(),
                 h_vel_z.data(),
-                h_mass.data()
-            );
+                h_mass.data());
 
             ForceCalculatorNaive naive(0.0);
             BarnesHutForceCalculator bh(0.0, 0.5);
 
             // Warm-up
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 naive.computeAccelerations(naiveParticles);
                 bh.computeAccelerations(bhParticles);
@@ -100,10 +99,10 @@ int main()
             naive.resetTimeStatistics();
             bh.resetTimeStatistics();
 
-            for(int i = 0; i < 100; i++)
+            for (int i = 0; i < 100; i++)
                 naive.computeAccelerations(naiveParticles);
 
-            for(int i = 0; i < 100; i++)
+            for (int i = 0; i < 100; i++)
                 bh.computeAccelerations(bhParticles);
 
             std::vector<double> naive_pos_x;
@@ -145,8 +144,7 @@ int main()
                 naive_acc_x,
                 naive_acc_y,
                 naive_acc_z,
-                naive_mass
-            );
+                naive_mass);
 
             copyStateToHost(
                 bhParticles,
@@ -159,8 +157,7 @@ int main()
                 bh_acc_x,
                 bh_acc_y,
                 bh_acc_z,
-                bh_mass
-            );
+                bh_mass);
 
             double avgAbs = 0.0;
             double maxAbs = 0.0;
@@ -168,24 +165,24 @@ int main()
             double avgRel = 0.0;
             double maxRel = 0.0;
 
-            for(int i = 0; i < N; i++)
+            for (int i = 0; i < N; i++)
             {
                 double dx = bh_acc_x[i] - naive_acc_x[i];
                 double dy = bh_acc_y[i] - naive_acc_y[i];
                 double dz = bh_acc_z[i] - naive_acc_z[i];
 
-                double absErr = std::sqrt(dx*dx + dy*dy + dz*dz);
+                double absErr = std::sqrt(dx * dx + dy * dy + dz * dz);
 
                 avgAbs += absErr;
                 maxAbs = std::max(maxAbs, absErr);
 
                 double ref =
                     std::sqrt(
-                        naive_acc_x[i]*naive_acc_x[i] +
-                        naive_acc_y[i]*naive_acc_y[i] +
-                        naive_acc_z[i]*naive_acc_z[i]);
+                        naive_acc_x[i] * naive_acc_x[i] +
+                        naive_acc_y[i] * naive_acc_y[i] +
+                        naive_acc_z[i] * naive_acc_z[i]);
 
-                if(ref > 1e-12)
+                if (ref > 1e-12)
                 {
                     double rel = absErr / ref;
 
@@ -229,7 +226,7 @@ int main()
             std::cout
                 << "\nSpeedup : "
                 << naive.getTotalComputeTime() /
-                   bh.getTotalComputeTime()
+                       bh.getTotalComputeTime()
                 << "x\n";
 
             std::cout
