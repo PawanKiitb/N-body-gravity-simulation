@@ -199,6 +199,9 @@ int main()
             std::cout
                 << "Total Time : "
                 << naive.getTotalComputeTime()
+                << " ms, "
+                << "Average Time: "
+                << naive.getTotalComputeTime() / 100.0
                 << " ms\n";
 
             std::cout << "\nBarnes-Hut\n";
@@ -206,21 +209,33 @@ int main()
             std::cout
                 << "Total Time : "
                 << bh.getTotalComputeTime()
+                << " ms, "
+                << "Average Time: "
+                << bh.getTotalComputeTime() / 100.0
                 << " ms\n";
 
             std::cout
                 << "Tree Build : "
                 << bh.getBuildTreeTime()
+                << " ms, "
+                << "Average Time: "
+                << bh.getBuildTreeTime() / 100.0
                 << " ms\n";
 
             std::cout
                 << "Traversal  : "
                 << bh.getTraversalTime()
+                << " ms, "
+                << "Average Time: "
+                << bh.getTraversalTime() / 100.0
                 << " ms\n";
 
             std::cout
                 << "Destroy    : "
                 << bh.getDestroyTreeTime()
+                << " ms, "
+                << "Average Time: "
+                << bh.getDestroyTreeTime() / 100.0
                 << " ms\n";
 
             std::cout
